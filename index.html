@@ -9,6 +9,7 @@ const App = () => {
   const [dailyMinutesUsed, setDailyMinutesUsed] = useState(2); // Mock: 2 minutes used
   const dailyLimit = 5;
   const fileInputRef = useRef(null);
+  const [message, setMessage] = useState(''); // State for displaying messages to the user
 
   const i18n = {
     ru: {
@@ -58,6 +59,9 @@ const App = () => {
       btnReset: 'Новый файл',
       minutesLeft: `Осталось минут на сегодня: ${dailyLimit - dailyMinutesUsed}`,
       limitExceeded: 'Лимит на сегодня исчерпан.',
+      sizeError: 'Размер файла превышает 50 МБ.',
+      limitError: 'Вы превысили свой дневной лимит.',
+      fileTypeError: 'Неподдерживаемый формат файла.',
     },
     en: {
       heroTitle: 'Remove background noise in seconds',
@@ -106,6 +110,9 @@ const App = () => {
       btnReset: 'New File',
       minutesLeft: `Minutes left for today: ${dailyLimit - dailyMinutesUsed}`,
       limitExceeded: 'Today\'s limit has been reached.',
+      sizeError: 'File size exceeds 50 MB.',
+      limitError: 'You have exceeded your daily limit.',
+      fileTypeError: 'File type not supported.',
     },
     de: {
       heroTitle: 'Hintergrundgeräusche in Sekunden entfernen',
@@ -154,6 +161,9 @@ const App = () => {
       btnReset: 'Neue Datei',
       minutesLeft: `Minuten übrig für heute: ${dailyLimit - dailyMinutesUsed}`,
       limitExceeded: 'Das heutige Limit wurde erreicht.',
+      sizeError: 'Die Dateigröße überschreitet 50 MB.',
+      limitError: 'Sie haben Ihr tägliches Limit überschritten.',
+      fileTypeError: 'Dateityp wird nicht unterstützt.',
     },
   };
 
@@ -162,16 +172,31 @@ const App = () => {
 
   // Handles file selection and drag/drop
   const handleFile = (file) => {
-    if (!file) return;
-
-    if (file.size > 50 * 1024 * 1024) {
-      alert('File size exceeds 50 MB.');
+    setMessage('');
+    if (!file) {
       return;
     }
 
-    const duration = 60 * 10; // Mock 10-second duration for demo
-    if (duration > (dailyLimit - dailyMinutesUsed) * 60) {
-      alert('You have exceeded your daily limit.');
+    // Check file type
+    const fileExtension = file.name.split('.').pop().toLowerCase();
+    const supportedFormats = ['wav', 'mp3', 'm4a'];
+    if (!supportedFormats.includes(fileExtension)) {
+      setMessage(t('fileTypeError'));
+      return;
+    }
+
+    // Check file size
+    if (file.size > 50 * 1024 * 1024) {
+      setMessage(t('sizeError'));
+      return;
+    }
+    
+    // Mock audio duration for checking against the daily limit
+    const mockDurationInSeconds = 10;
+    const mockDurationInMinutes = Math.ceil(mockDurationInSeconds / 60);
+
+    if (mockDurationInMinutes > (dailyLimit - dailyMinutesUsed)) {
+      setMessage(t('limitError'));
       return;
     }
     
@@ -240,6 +265,7 @@ const App = () => {
     setProcessedFile(null);
     setProgress(0);
     setIsProcessing(false);
+    setMessage('');
   };
   
   const minutesLeft = dailyLimit - dailyMinutesUsed;
@@ -249,7 +275,7 @@ const App = () => {
       {/* Header */}
       <header className="bg-white shadow-md py-4 px-8 flex justify-between items-center">
         <div className="flex items-center">
-          <img src="https://placehold.co/40x40/6c63ff/ffffff?text=NG" alt="NoiseGone Logo" className="h-10 w-10 mr-2" />
+          <img src="https://placehold.co/40x40/6c63ff/ffffff?text=NG" alt="NoiseGone Logo" className="h-10 w-10 mr-2 rounded-lg" />
           <span className="font-bold text-2xl text-gray-900">NoiseGone</span>
         </div>
         <nav className="hidden md:flex items-center space-x-6">
@@ -305,10 +331,16 @@ const App = () => {
                   {t('btnProcess')}
                 </button>
               )}
-              {minutesLeft <= 0 && <p className="text-red-500 mt-2">{t('limitExceeded')}</p>}
             </div>
           )}
 
+          {/* Message Box for errors or other info */}
+          {message && (
+            <div className="mt-4 text-red-500 font-medium">
+              {message}
+            </div>
+          )}
+          
           {isProcessing && (
             <div className="mt-8">
               <p className="text-gray-600 mb-2">Обработка...</p>
