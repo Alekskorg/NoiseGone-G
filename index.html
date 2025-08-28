@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { createRoot } from 'react-dom/client';
 
 // Main App Component
 const App = () => {
@@ -271,267 +272,269 @@ const App = () => {
   const minutesLeft = dailyLimit - dailyMinutesUsed;
 
   return (
-    <div className="bg-white text-gray-800">
-      {/* Header */}
-      <header className="bg-white shadow-md py-4 px-8 flex justify-between items-center">
-        <div className="flex items-center">
-          <img src="https://placehold.co/40x40/6c63ff/ffffff?text=NG" alt="NoiseGone Logo" className="h-10 w-10 mr-2 rounded-lg" />
-          <span className="font-bold text-2xl text-gray-900">NoiseGone</span>
-        </div>
-        <nav className="hidden md:flex items-center space-x-6">
-          <a href="#features" className="text-gray-600 hover:text-gray-900 transition-colors duration-200">Features</a>
-          <a href="#pricing" className="text-gray-600 hover:text-gray-900 transition-colors duration-200">Pricing</a>
-          <a href="#faq" className="text-gray-600 hover:text-gray-900 transition-colors duration-200">FAQ</a>
-          <div className="flex items-center space-x-2">
-            <span className="text-gray-600">{t('language')}:</span>
-            <button onClick={() => setLang('ru')} className={`font-semibold ${lang === 'ru' ? 'text-gray-900' : 'text-gray-400'}`}>RU</button>
-            <button onClick={() => setLang('en')} className={`font-semibold ${lang === 'en' ? 'text-gray-900' : 'text-gray-400'}`}>EN</button>
-            <button onClick={() => setLang('de')} className={`font-semibold ${lang === 'de' ? 'text-gray-900' : 'text-gray-400'}`}>DE</button>
+    <>
+      <script src="https://cdn.tailwindcss.com"></script>
+      <div className="bg-white text-gray-800">
+        {/* Header */}
+        <header className="bg-white shadow-md py-4 px-8 flex justify-between items-center">
+          <div className="flex items-center">
+            <img src="https://placehold.co/40x40/6c63ff/ffffff?text=NG" alt="NoiseGone Logo" className="h-10 w-10 mr-2 rounded-lg" />
+            <span className="font-bold text-2xl text-gray-900">NoiseGone</span>
           </div>
-          <a href="#" className="py-2 px-4 rounded-full bg-gray-200 text-gray-800 hover:bg-gray-300 transition-colors duration-200">Sign in</a>
-        </nav>
-        {/* Mobile menu button (not implemented) */}
-      </header>
+          <nav className="hidden md:flex items-center space-x-6">
+            <a href="#features" className="text-gray-600 hover:text-gray-900 transition-colors duration-200">Features</a>
+            <a href="#pricing" className="text-gray-600 hover:text-gray-900 transition-colors duration-200">Pricing</a>
+            <a href="#faq" className="text-gray-600 hover:text-gray-900 transition-colors duration-200">FAQ</a>
+            <div className="flex items-center space-x-2">
+              <span className="text-gray-600">{t('language')}:</span>
+              <button onClick={() => setLang('ru')} className={`font-semibold ${lang === 'ru' ? 'text-gray-900' : 'text-gray-400'}`}>RU</button>
+              <button onClick={() => setLang('en')} className={`font-semibold ${lang === 'en' ? 'text-gray-900' : 'text-gray-400'}`}>EN</button>
+              <button onClick={() => setLang('de')} className={`font-semibold ${lang === 'de' ? 'text-gray-900' : 'text-gray-400'}`}>DE</button>
+            </div>
+            <a href="#" className="py-2 px-4 rounded-full bg-gray-200 text-gray-800 hover:bg-gray-300 transition-colors duration-200">Sign in</a>
+          </nav>
+          {/* Mobile menu button (not implemented) */}
+        </header>
 
-      <main className="container mx-auto px-4 py-16 text-center">
-        {/* Hero Section */}
-        <section className="py-12">
-          <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900 leading-tight mb-4">{t('heroTitle')}</h1>
-          <p className="text-lg md:text-xl text-gray-600 max-w-2xl mx-auto mb-8">{t('heroSubtitle')}</p>
+        <main className="container mx-auto px-4 py-16 text-center">
+          {/* Hero Section */}
+          <section className="py-12">
+            <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900 leading-tight mb-4">{t('heroTitle')}</h1>
+            <p className="text-lg md:text-xl text-gray-600 max-w-2xl mx-auto mb-8">{t('heroSubtitle')}</p>
 
-          {!selectedFile && (
-            <div 
-              onDrop={onDrop}
-              onDragOver={onDragOver}
-              onDragLeave={onDragLeave}
-              className="border-4 border-dashed border-gray-300 rounded-2xl p-12 mb-6 cursor-pointer hover:bg-gray-50 transition-colors duration-200"
-              onClick={handleSelectFile}
-            >
-              <input 
-                type="file" 
-                ref={fileInputRef} 
-                className="hidden" 
-                accept=".wav,.mp3,.m4a" 
-                onChange={(e) => handleFile(e.target.files[0])} 
-              />
-              <p className="text-lg text-gray-600 font-semibold">{t('dropMessage')}</p>
-              <p className="text-sm text-gray-400 mt-1">{t('dropFormats')}</p>
-            </div>
-          )}
-
-          {selectedFile && (
-            <div className="mt-4">
-              <p className="text-lg font-medium text-gray-800">{selectedFile.name}</p>
-              {!isProcessing && !processedFile && (
-                <button
-                  onClick={handleProcess}
-                  disabled={minutesLeft <= 0}
-                  className={`mt-4 py-3 px-8 rounded-full text-white font-bold transition-all duration-300 transform hover:scale-105 ${minutesLeft <= 0 ? 'bg-gray-400 cursor-not-allowed' : 'bg-indigo-600 hover:bg-indigo-700'}`}
-                >
-                  {t('btnProcess')}
-                </button>
-              )}
-            </div>
-          )}
-
-          {/* Message Box for errors or other info */}
-          {message && (
-            <div className="mt-4 text-red-500 font-medium">
-              {message}
-            </div>
-          )}
-          
-          {isProcessing && (
-            <div className="mt-8">
-              <p className="text-gray-600 mb-2">Обработка...</p>
-              <div className="w-full bg-gray-200 rounded-full h-2.5">
-                <div 
-                  className="bg-indigo-600 h-2.5 rounded-full transition-all duration-300" 
-                  style={{ width: `${progress * 100}%` }}
-                ></div>
-              </div>
-            </div>
-          )}
-        </section>
-
-        {/* Features Section */}
-        <section id="features" className="py-16">
-          <h2 className="text-3xl md:text-4xl font-extrabold text-gray-900 mb-12">{t('featuresTitle')}</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            <div className="bg-gray-50 p-6 rounded-2xl shadow-sm hover:shadow-lg transition-shadow duration-300">
-              <h3 className="text-xl font-bold mb-2">{t('feature1Title')}</h3>
-              <p className="text-gray-600">{t('feature1Desc')}</p>
-            </div>
-            <div className="bg-gray-50 p-6 rounded-2xl shadow-sm hover:shadow-lg transition-shadow duration-300">
-              <h3 className="text-xl font-bold mb-2">{t('feature2Title')}</h3>
-              <p className="text-gray-600">{t('feature2Desc')}</p>
-            </div>
-            <div className="bg-gray-50 p-6 rounded-2xl shadow-sm hover:shadow-lg transition-shadow duration-300">
-              <h3 className="text-xl font-bold mb-2">{t('feature3Title')}</h3>
-              <p className="text-gray-600">{t('feature3Desc')}</p>
-            </div>
-            <div className="bg-gray-50 p-6 rounded-2xl shadow-sm hover:shadow-lg transition-shadow duration-300">
-              <h3 className="text-xl font-bold mb-2">{t('feature4Title')}</h3>
-              <p className="text-gray-600">{t('feature4Desc')}</p>
-            </div>
-          </div>
-        </section>
-        
-        {/* How It Works Section */}
-        <section className="py-16">
-          <h2 className="text-3xl md:text-4xl font-extrabold text-gray-900 mb-12">{t('howItWorksTitle')}</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="flex flex-col items-center">
-              <div className="w-16 h-16 rounded-full bg-indigo-100 flex items-center justify-center mb-4">
-                <span className="text-3xl">1</span>
-              </div>
-              <h3 className="text-xl font-bold">{t('step1')}</h3>
-              <p className="text-gray-600 text-sm mt-1">{t('step1Desc')}</p>
-            </div>
-            <div className="flex flex-col items-center">
-              <div className="w-16 h-16 rounded-full bg-indigo-100 flex items-center justify-center mb-4">
-                <span className="text-3xl">2</span>
-              </div>
-              <h3 className="text-xl font-bold">{t('step2')}</h3>
-              <p className="text-gray-600 text-sm mt-1">{t('step2Desc')}</p>
-            </div>
-            <div className="flex flex-col items-center">
-              <div className="w-16 h-16 rounded-full bg-indigo-100 flex items-center justify-center mb-4">
-                <span className="text-3xl">3</span>
-              </div>
-              <h3 className="text-xl font-bold">{t('step3')}</h3>
-              <p className="text-gray-600 text-sm mt-1">{t('step3Desc')}</p>
-            </div>
-          </div>
-        </section>
-        
-        {/* Demo Section (A/B player) */}
-        {processedFile && (
-          <section className="py-16">
-            <h2 className="text-3xl md:text-4xl font-extrabold text-gray-900 mb-8">{t('demoTitle')}</h2>
-            <div className="flex flex-col md:flex-row justify-center items-center space-y-8 md:space-y-0 md:space-x-8">
-              <div className="bg-gray-50 p-6 rounded-2xl shadow-md w-full max-w-md">
-                <h3 className="font-bold text-lg mb-4">{t('original')}</h3>
-                <audio controls className="w-full">
-                  <source src={URL.createObjectURL(selectedFile)} type={selectedFile.type} />
-                  Your browser does not support the audio element.
-                </audio>
-              </div>
-              <div className="bg-gray-50 p-6 rounded-2xl shadow-md w-full max-w-md">
-                <h3 className="font-bold text-lg mb-4">{t('cleaned')}</h3>
-                <audio controls className="w-full">
-                  <source src={URL.createObjectURL(processedFile)} type={processedFile.type} />
-                  Your browser does not support the audio element.
-                </audio>
-              </div>
-            </div>
-            <div className="mt-8 flex flex-col sm:flex-row justify-center items-center space-y-4 sm:space-y-0 sm:space-x-4">
-              <button 
-                onClick={handleDownload}
-                className="py-3 px-8 rounded-full text-white font-bold bg-indigo-600 hover:bg-indigo-700 transition-colors duration-200 transform hover:scale-105"
+            {!selectedFile && (
+              <div 
+                onDrop={onDrop}
+                onDragOver={onDragOver}
+                onDragLeave={onDragLeave}
+                className="border-4 border-dashed border-gray-300 rounded-2xl p-12 mb-6 cursor-pointer hover:bg-gray-50 transition-colors duration-200"
+                onClick={handleSelectFile}
               >
-                {t('btnDownload')}
-              </button>
-              <button 
-                onClick={handleReset}
-                className="py-3 px-8 rounded-full text-gray-800 font-bold bg-gray-200 hover:bg-gray-300 transition-colors duration-200 transform hover:scale-105"
-              >
-                {t('btnReset')}
-              </button>
+                <input 
+                  type="file" 
+                  ref={fileInputRef} 
+                  className="hidden" 
+                  accept=".wav,.mp3,.m4a" 
+                  onChange={(e) => handleFile(e.target.files[0])} 
+                />
+                <p className="text-lg text-gray-600 font-semibold">{t('dropMessage')}</p>
+                <p className="text-sm text-gray-400 mt-1">{t('dropFormats')}</p>
+              </div>
+            )}
+
+            {selectedFile && (
+              <div className="mt-4">
+                <p className="text-lg font-medium text-gray-800">{selectedFile.name}</p>
+                {!isProcessing && !processedFile && (
+                  <button
+                    onClick={handleProcess}
+                    disabled={minutesLeft <= 0}
+                    className={`mt-4 py-3 px-8 rounded-full text-white font-bold transition-all duration-300 transform hover:scale-105 ${minutesLeft <= 0 ? 'bg-gray-400 cursor-not-allowed' : 'bg-indigo-600 hover:bg-indigo-700'}`}
+                  >
+                    {t('btnProcess')}
+                  </button>
+                )}
+              </div>
+            )}
+
+            {/* Message Box for errors or other info */}
+            {message && (
+              <div className="mt-4 text-red-500 font-medium">
+                {message}
+              </div>
+            )}
+            
+            {isProcessing && (
+              <div className="mt-8">
+                <p className="text-gray-600 mb-2">Обработка...</p>
+                <div className="w-full bg-gray-200 rounded-full h-2.5">
+                  <div 
+                    className="bg-indigo-600 h-2.5 rounded-full transition-all duration-300" 
+                    style={{ width: `${progress * 100}%` }}
+                  ></div>
+                </div>
+              </div>
+            )}
+          </section>
+
+          {/* Features Section */}
+          <section id="features" className="py-16">
+            <h2 className="text-3xl md:text-4xl font-extrabold text-gray-900 mb-12">{t('featuresTitle')}</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+              <div className="bg-gray-50 p-6 rounded-2xl shadow-sm hover:shadow-lg transition-shadow duration-300">
+                <h3 className="text-xl font-bold mb-2">{t('feature1Title')}</h3>
+                <p className="text-gray-600">{t('feature1Desc')}</p>
+              </div>
+              <div className="bg-gray-50 p-6 rounded-2xl shadow-sm hover:shadow-lg transition-shadow duration-300">
+                <h3 className="text-xl font-bold mb-2">{t('feature2Title')}</h3>
+                <p className="text-gray-600">{t('feature2Desc')}</p>
+              </div>
+              <div className="bg-gray-50 p-6 rounded-2xl shadow-sm hover:shadow-lg transition-shadow duration-300">
+                <h3 className="text-xl font-bold mb-2">{t('feature3Title')}</h3>
+                <p className="text-gray-600">{t('feature3Desc')}</p>
+              </div>
+              <div className="bg-gray-50 p-6 rounded-2xl shadow-sm hover:shadow-lg transition-shadow duration-300">
+                <h3 className="text-xl font-bold mb-2">{t('feature4Title')}</h3>
+                <p className="text-gray-600">{t('feature4Desc')}</p>
+              </div>
             </div>
           </section>
-        )}
-        
-        {/* Pricing Section */}
-        <section id="pricing" className="py-16">
-          <h2 className="text-3xl md:text-4xl font-extrabold text-gray-900 mb-12">{t('pricingTitle')}</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {/* Free Plan */}
-            <div className="bg-gray-50 p-8 rounded-2xl shadow-md flex flex-col items-center">
-              <h3 className="text-2xl font-bold mb-2">{t('pricingFree')}</h3>
-              <p className="text-4xl font-extrabold text-gray-900 mb-4">
-                <span className="text-lg font-normal">до</span> 5 <span className="text-lg font-normal">мин/день</span>
-              </p>
-              <ul className="text-gray-600 text-left w-full mb-6 list-disc list-inside">
-                <li>Обработка в браузере</li>
-                <li>Не требуется регистрация</li>
-                <li>Ограниченный лимит</li>
-              </ul>
-              <button className="w-full py-3 rounded-full text-white font-bold bg-indigo-600 opacity-50 cursor-not-allowed">
-                {t('pricingFree')}
-              </button>
+          
+          {/* How It Works Section */}
+          <section className="py-16">
+            <h2 className="text-3xl md:text-4xl font-extrabold text-gray-900 mb-12">{t('howItWorksTitle')}</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              <div className="flex flex-col items-center">
+                <div className="w-16 h-16 rounded-full bg-indigo-100 flex items-center justify-center mb-4">
+                  <span className="text-3xl">1</span>
+                </div>
+                <h3 className="text-xl font-bold">{t('step1')}</h3>
+                <p className="text-gray-600 text-sm mt-1">{t('step1Desc')}</p>
+              </div>
+              <div className="flex flex-col items-center">
+                <div className="w-16 h-16 rounded-full bg-indigo-100 flex items-center justify-center mb-4">
+                  <span className="text-3xl">2</span>
+                </div>
+                <h3 className="text-xl font-bold">{t('step2')}</h3>
+                <p className="text-gray-600 text-sm mt-1">{t('step2Desc')}</p>
+              </div>
+              <div className="flex flex-col items-center">
+                <div className="w-16 h-16 rounded-full bg-indigo-100 flex items-center justify-center mb-4">
+                  <span className="text-3xl">3</span>
+                </div>
+                <h3 className="text-xl font-bold">{t('step3')}</h3>
+                <p className="text-gray-600 text-sm mt-1">{t('step3Desc')}</p>
+              </div>
             </div>
-            {/* Pro Plan */}
-            <div className="bg-indigo-600 text-white p-8 rounded-2xl shadow-xl flex flex-col items-center transform scale-105">
-              <h3 className="text-2xl font-bold mb-2">{t('pricingPro')}</h3>
-              <p className="text-4xl font-extrabold mb-4">
-                <span className="text-lg font-normal">от</span> 60 <span className="text-lg font-normal">мин/мес</span>
-              </p>
-              <ul className="text-white text-left w-full mb-6 list-disc list-inside">
-                <li>Безлимитная обработка</li>
-                <li>Доступ к серверным моделям</li>
-                <li>Техническая поддержка</li>
-              </ul>
-              <button className="w-full py-3 rounded-full text-indigo-600 font-bold bg-white hover:bg-gray-200 transition-colors duration-200">
-                {t('pricingCTA')}
-              </button>
+          </section>
+          
+          {/* Demo Section (A/B player) */}
+          {processedFile && (
+            <section className="py-16">
+              <h2 className="text-3xl md:text-4xl font-extrabold text-gray-900 mb-8">{t('demoTitle')}</h2>
+              <div className="flex flex-col md:flex-row justify-center items-center space-y-8 md:space-y-0 md:space-x-8">
+                <div className="bg-gray-50 p-6 rounded-2xl shadow-md w-full max-w-md">
+                  <h3 className="font-bold text-lg mb-4">{t('original')}</h3>
+                  <audio controls className="w-full">
+                    <source src={URL.createObjectURL(selectedFile)} type={selectedFile.type} />
+                    Your browser does not support the audio element.
+                  </audio>
+                </div>
+                <div className="bg-gray-50 p-6 rounded-2xl shadow-md w-full max-w-md">
+                  <h3 className="font-bold text-lg mb-4">{t('cleaned')}</h3>
+                  <audio controls className="w-full">
+                    <source src={URL.createObjectURL(processedFile)} type={processedFile.type} />
+                    Your browser does not support the audio element.
+                  </audio>
+                </div>
+              </div>
+              <div className="mt-8 flex flex-col sm:flex-row justify-center items-center space-y-4 sm:space-y-0 sm:space-x-4">
+                <button 
+                  onClick={handleDownload}
+                  className="py-3 px-8 rounded-full text-white font-bold bg-indigo-600 hover:bg-indigo-700 transition-colors duration-200 transform hover:scale-105"
+                >
+                  {t('btnDownload')}
+                </button>
+                <button 
+                  onClick={handleReset}
+                  className="py-3 px-8 rounded-full text-gray-800 font-bold bg-gray-200 hover:bg-gray-300 transition-colors duration-200 transform hover:scale-105"
+                >
+                  {t('btnReset')}
+                </button>
+              </div>
+            </section>
+          )}
+          
+          {/* Pricing Section */}
+          <section id="pricing" className="py-16">
+            <h2 className="text-3xl md:text-4xl font-extrabold text-gray-900 mb-12">{t('pricingTitle')}</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              {/* Free Plan */}
+              <div className="bg-gray-50 p-8 rounded-2xl shadow-md flex flex-col items-center">
+                <h3 className="text-2xl font-bold mb-2">{t('pricingFree')}</h3>
+                <p className="text-4xl font-extrabold text-gray-900 mb-4">
+                  <span className="text-lg font-normal">до</span> 5 <span className="text-lg font-normal">мин/день</span>
+                </p>
+                <ul className="text-gray-600 text-left w-full mb-6 list-disc list-inside">
+                  <li>Обработка в браузере</li>
+                  <li>Не требуется регистрация</li>
+                  <li>Ограниченный лимит</li>
+                </ul>
+                <button className="w-full py-3 rounded-full text-white font-bold bg-indigo-600 opacity-50 cursor-not-allowed">
+                  {t('pricingFree')}
+                </button>
+              </div>
+              {/* Pro Plan */}
+              <div className="bg-indigo-600 text-white p-8 rounded-2xl shadow-xl flex flex-col items-center transform scale-105">
+                <h3 className="text-2xl font-bold mb-2">{t('pricingPro')}</h3>
+                <p className="text-4xl font-extrabold mb-4">
+                  <span className="text-lg font-normal">от</span> 60 <span className="text-lg font-normal">мин/мес</span>
+                </p>
+                <ul className="text-white text-left w-full mb-6 list-disc list-inside">
+                  <li>Безлимитная обработка</li>
+                  <li>Доступ к серверным моделям</li>
+                  <li>Техническая поддержка</li>
+                </ul>
+                <button className="w-full py-3 rounded-full text-indigo-600 font-bold bg-white hover:bg-gray-200 transition-colors duration-200">
+                  {t('pricingCTA')}
+                </button>
+              </div>
+              {/* Premium Plan */}
+              <div className="bg-gray-50 p-8 rounded-2xl shadow-md flex flex-col items-center">
+                <h3 className="text-2xl font-bold mb-2">{t('pricingPremium')}</h3>
+                <p className="text-4xl font-extrabold text-gray-900 mb-4">
+                  <span className="text-lg font-normal">от</span> 300 <span className="text-lg font-normal">мин/мес</span>
+                </p>
+                <ul className="text-gray-600 text-left w-full mb-6 list-disc list-inside">
+                  <li>Всё из Pro-плана</li>
+                  <li>Приоритетная обработка</li>
+                  <li>Пакетная обработка</li>
+                </ul>
+                <button className="w-full py-3 rounded-full text-white font-bold bg-indigo-600 hover:bg-indigo-700 transition-colors duration-200">
+                  {t('pricingCTA')}
+                </button>
+              </div>
             </div>
-            {/* Premium Plan */}
-            <div className="bg-gray-50 p-8 rounded-2xl shadow-md flex flex-col items-center">
-              <h3 className="text-2xl font-bold mb-2">{t('pricingPremium')}</h3>
-              <p className="text-4xl font-extrabold text-gray-900 mb-4">
-                <span className="text-lg font-normal">от</span> 300 <span className="text-lg font-normal">мин/мес</span>
-              </p>
-              <ul className="text-gray-600 text-left w-full mb-6 list-disc list-inside">
-                <li>Всё из Pro-плана</li>
-                <li>Приоритетная обработка</li>
-                <li>Пакетная обработка</li>
-              </ul>
-              <button className="w-full py-3 rounded-full text-white font-bold bg-indigo-600 hover:bg-indigo-700 transition-colors duration-200">
-                {t('pricingCTA')}
-              </button>
+          </section>
+
+          {/* FAQ Section */}
+          <section id="faq" className="py-16 text-left">
+            <h2 className="text-3xl md:text-4xl font-extrabold text-gray-900 text-center mb-12">{t('faqTitle')}</h2>
+            <div className="space-y-6">
+              <div>
+                <h3 className="font-bold text-lg">{t('faqQ1')}</h3>
+                <p className="text-gray-600 mt-2">{t('faqA1')}</p>
+              </div>
+              <div>
+                <h3 className="font-bold text-lg">{t('faqQ2')}</h3>
+                <p className="text-gray-600 mt-2">{t('faqA2')}</p>
+              </div>
+              <div>
+                <h3 className="font-bold text-lg">{t('faqQ3')}</h3>
+                <p className="text-gray-600 mt-2">{t('faqA3')}</p>
+              </div>
+              <div>
+                <h3 className="font-bold text-lg">{t('faqQ4')}</h3>
+                <p className="text-gray-600 mt-2">{t('faqA4')}</p>
+              </div>
             </div>
+          </section>
+
+        </main>
+
+        {/* Footer */}
+        <footer className="bg-gray-900 text-gray-400 py-12 px-8 text-center">
+          <p className="mb-2 font-bold text-lg text-white">{t('footerSlogan')}</p>
+          <div className="flex justify-center space-x-4 mb-4">
+            <a href="#" className="hover:text-white">Privacy Policy</a>
+            <a href="#" className="hover:text-white">Terms of Service</a>
+            <a href="#" className="hover:text-white">Cookie Notice</a>
           </div>
-        </section>
-
-        {/* FAQ Section */}
-        <section id="faq" className="py-16 text-left">
-          <h2 className="text-3xl md:text-4xl font-extrabold text-gray-900 text-center mb-12">{t('faqTitle')}</h2>
-          <div className="space-y-6">
-            <div>
-              <h3 className="font-bold text-lg">{t('faqQ1')}</h3>
-              <p className="text-gray-600 mt-2">{t('faqA1')}</p>
-            </div>
-            <div>
-              <h3 className="font-bold text-lg">{t('faqQ2')}</h3>
-              <p className="text-gray-600 mt-2">{t('faqA2')}</p>
-            </div>
-            <div>
-              <h3 className="font-bold text-lg">{t('faqQ3')}</h3>
-              <p className="text-gray-600 mt-2">{t('faqA3')}</p>
-            </div>
-            <div>
-              <h3 className="font-bold text-lg">{t('faqQ4')}</h3>
-              <p className="text-gray-600 mt-2">{t('faqA4')}</p>
-            </div>
-          </div>
-        </section>
-
-      </main>
-
-      {/* Footer */}
-      <footer className="bg-gray-900 text-gray-400 py-12 px-8 text-center">
-        <p className="mb-2 font-bold text-lg text-white">{t('footerSlogan')}</p>
-        <div className="flex justify-center space-x-4 mb-4">
-          <a href="#" className="hover:text-white">Privacy Policy</a>
-          <a href="#" className="hover:text-white">Terms of Service</a>
-          <a href="#" className="hover:text-white">Cookie Notice</a>
-        </div>
-        <p className="text-sm">{t('copyright')}</p>
-      </footer>
-    </div>
+          <p className="text-sm">{t('copyright')}</p>
+        </footer>
+      </div>
+    </>
   );
 };
 
 export default App;
-
