@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NoiseGone — Онлайн очистка шума</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --primary-color: #6c63ff;
+      --text-color: #333;
+      --bg-color: #f4f4f9;
+      --dropzone-bg: #fff;
+      --dropzone-border: #ccc;
+      --dropzone-hover: #e6e6fa;
+      --progress-bg: #e0e0e0;
+      --progress-bar: var(--primary-color);
+      --btn-bg: var(--primary-color);
+      --btn-text: #fff;
+      --danger-color: #f44336;
+    }
+    body {
+      font-family: 'Inter', sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      box-sizing: border-box;
+    }
+    .site-header {
+      width: 100%;
+      background-color: #fff;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .brand {
+      height: 40px;
+    }
+    .container {
+      max-width: 600px;
+      width: 100%;
+      padding: 24px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      flex-grow: 1;
+      justify-content: center;
+    }
+    h1 {
+      position: absolute;
+      left: -9999px;
+      top: auto;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+    }
+    .sub {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: #555;
+    }
+    .dropzone {
+      width: 100%;
+      height: 200px;
+      border: 2px dashed var(--dropzone-border);
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+      background-color: var(--dropzone-bg);
+    }
+    .dropzone.hover {
+      background-color: var(--dropzone-hover);
+      border-color: var(--primary-color);
+    }
+    #hint {
+      font-size: 1rem;
+      font-weight: 600;
+      margin: 0;
+    }
+    .formats {
+      font-size: 0.875rem;
+      color: #999;
+      margin: 4px 0 0;
+    }
+    .fileInfo {
+      font-weight: 600;
+      margin: 0;
+      min-height: 1em;
+    }
+    .btn {
+      padding: 12px 24px;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background-color 0.3s ease, transform 0.1s ease;
+      font-size: 1rem;
+    }
+    #cleanBtn {
+      background-color: var(--btn-bg);
+      color: var(--btn-text);
+    }
+    #cleanBtn:disabled {
+      background-color: #ccc;
+      cursor: not-allowed;
+    }
+    #downloadBtn {
+      background-color: var(--primary-color);
+      color: #fff;
+    }
+    #newBtn {
+      background-color: #f0f0f0;
+      color: #555;
+    }
+    .progress {
+      width: 100%;
+      height: 24px;
+      background-color: var(--progress-bg);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    #progressBar {
+      height: 100%;
+      width: 0%;
+      background-color: var(--progress-bar);
+      transition: width 0.3s ease;
+    }
+    #result {
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+    }
+    #messageBox {
+      min-height: 20px;
+      font-weight: 600;
+      text-align: center;
+      color: var(--danger-color);
+    }
+  </style>
+</head>
+<body>
+  <!-- HEADER с логотипом -->
+  <header class="site-header">
+    <a href="/" class="brand" aria-label="NoiseGone">
+      <img src="https://placehold.co/120x40/6c63ff/ffffff?text=NoiseGone" alt="NoiseGone logo" height="40" />
+    </a>
+  </header>
+
+  <!-- MAIN -->
+  <main class="container">
+    <!-- h1 прячем визуально, но оставляем для доступности -->
+    <h1>NoiseGone</h1>
+    <p class="sub" data-i18n="subtitle"></p>
+
+    <!-- dropzone -->
+    <div id="dropzone" class="dropzone" tabindex="0" aria-describedby="hint">
+      <p id="hint" data-i18n="dropMessage"></p>
+      <p class="formats" data-i18n="dropFormats"></p>
+      <input type="file" id="fileInput" accept=".wav,.mp3,.m4a" hidden />
+    </div>
+    <p id="fileInfo" class="fileInfo"></p>
+
+    <!-- message box -->
+    <div id="messageBox"></div>
+
+    <button id="cleanBtn" class="btn" disabled data-i18n="btnClean"></button>
+
+    <!-- progress -->
+    <div id="progressWrap" class="progress" hidden>
+      <div id="progressBar"></div>
+    </div>
+
+    <!-- result -->
+    <div id="result" hidden>
+      <p data-i18n="done"></p>
+      <button id="downloadBtn" class="btn" data-i18n="btnDownload"></button>
+      <button id="newBtn" class="btn" data-i18n="btnNew"></button>
+    </div>
+  </main>
+
+  <!-- SCRIPTS -->
+  <script>
+    const i18n = {
+      en: {
+        subtitle: 'Online noise remover',
+        dropMessage: 'Drag & drop or choose file',
+        dropFormats: 'WAV, MP3, M4A up to 50 MB',
+        btnClean: 'Clean noise',
+        done: 'Done.',
+        btnDownload: 'Download',
+        btnNew: 'New file',
+        sizeError: 'File is too large (>50 MB)',
+        typeError: 'File type not supported'
+      },
+      ru: {
+        subtitle: 'Онлайн очистка шума',
+        dropMessage: 'Перетащите файл сюда или выберите',
+        dropFormats: 'WAV, MP3, M4A до 50 МБ',
+        btnClean: 'Очистить шум',
+        done: 'Готово.',
+        btnDownload: 'Скачать',
+        btnNew: 'Новый файл',
+        sizeError: 'Файл слишком большой (>50 МБ)',
+        typeError: 'Неподдерживаемый формат файла'
+      }
+    };
+    const lang = navigator.language.startsWith('ru') ? 'ru' : 'en';
+
+    /* ===== UI refs ===== */
+    const dz = document.getElementById('dropzone');
+    const fileInput = document.getElementById('fileInput');
+    const fileInfo = document.getElementById('fileInfo');
+    const cleanBtn = document.getElementById('cleanBtn');
+    const progressWrap = document.getElementById('progressWrap');
+    const progressBar = document.getElementById('progressBar');
+    const result = document.getElementById('result');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const newBtn = document.getElementById('newBtn');
+    const messageBox = document.getElementById('messageBox');
+
+    /* ===== state ===== */
+    let selectedFile = null;
+
+    /* ===== helpers ===== */
+    // Функция для перевода текста
+    function t(key) { return i18n[lang][key] || key; }
+
+    // Функция для установки текстов на основе атрибута data-i18n
+    function setTexts() {
+      [...document.querySelectorAll('[data-i18n]')]
+        .forEach(el => el.textContent = t(el.dataset.i18n));
+    }
+
+    // Функция для вывода сообщений на экран вместо alert()
+    function displayMessage(msg, type = 'error') {
+      messageBox.textContent = msg;
+      messageBox.style.color = type === 'error' ? 'var(--danger-color)' : 'var(--primary-color)';
+    }
+
+    // Функция для сброса сообщений
+    function clearMessage() {
+      messageBox.textContent = '';
+    }
+
+    /* ===== dropzone ===== */
+    function handleFiles(list) {
+      clearMessage();
+      if (!list || !list[0]) return;
+      const f = list[0];
+
+      if (f.size > 50 * 1024 * 1024) {
+        displayMessage(t('sizeError'));
+        return;
+      }
+      if (!/\.(wav|mp3|m4a)$/i.test(f.name)) {
+        displayMessage(t('typeError'));
+        return;
+      }
+
+      selectedFile = f;
+      fileInfo.textContent = f.name;
+      cleanBtn.disabled = false;
+    }
+
+    dz.addEventListener('click', () => fileInput.click());
+    fileInput.addEventListener('change', e => handleFiles(e.target.files));
+
+    ['dragenter', 'dragover'].forEach(ev =>
+      dz.addEventListener(ev, e => {
+        e.preventDefault();
+        dz.classList.add('hover');
+        e.dataTransfer.dropEffect = 'copy';
+      })
+    );
+
+    ['dragleave', 'dragend', 'drop'].forEach(ev =>
+      dz.addEventListener(ev, () => dz.classList.remove('hover'))
+    );
+
+    dz.addEventListener('drop', e => {
+      e.preventDefault();
+      handleFiles(e.dataTransfer.files);
+    });
+
+    /* Глобальный preventDefault для предотвращения открытия файлов в браузере */
+    ['dragover', 'drop'].forEach(ev =>
+      document.addEventListener(ev, e => {
+        if (e.target !== dz) e.preventDefault();
+      })
+    );
+
+    /* ===== clean noise (моделирование процесса) ===== */
+    cleanBtn.addEventListener('click', () => {
+      if (!selectedFile) return;
+      cleanBtn.disabled = true;
+      progressWrap.hidden = false;
+      let prog = 0;
+      const progressInterval = setInterval(() => {
+        prog += 0.1;
+        if (prog > 1) prog = 1;
+        progressBar.style.width = Math.round(prog * 100) + '%';
+        if (prog === 1) {
+          clearInterval(progressInterval);
+          finish();
+        }
+      }, 300); // Интервал для более плавной анимации
+    });
+
+    function finish() {
+      progressWrap.hidden = true;
+      result.hidden = false;
+      downloadBtn.disabled = false;
+    }
+
+    downloadBtn.addEventListener('click', () => {
+      // Имитация скачивания файла
+      const ext = selectedFile.name.split('.').pop();
+      const base = selectedFile.name.replace(/\.[^/.]+$/, '');
+      const a = document.createElement('a');
+      const blob = new Blob(['Mock cleaned audio data'], { type: 'audio/wav' });
+      a.href = URL.createObjectURL(blob);
+      a.download = `${base}.cleaned.${ext}`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(a.href);
+    });
+
+    newBtn.addEventListener('click', () => {
+      selectedFile = null;
+      fileInfo.textContent = '';
+      cleanBtn.disabled = true;
+      result.hidden = true;
+      progressWrap.hidden = true;
+      progressBar.style.width = '0%';
+      clearMessage();
+    });
+
+    /* ===== init ===== */
+    setTexts();
+  </script>
+</body>
+</html>
