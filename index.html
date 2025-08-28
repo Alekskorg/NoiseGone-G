@@ -6,6 +6,7 @@
   <title>NoiseGone — Онлайн очистка шума</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
   <style>
+    /* CSS-стили для оформления */
     :root {
       --primary-color: #6c63ff;
       --text-color: #333;
@@ -187,17 +188,18 @@
   <!-- HEADER с логотипом -->
   <header class="site-header">
     <a href="/" class="brand" aria-label="NoiseGone">
+      <!-- Использование placeholder-изображения для простоты, можно заменить на реальное -->
       <img src="https://placehold.co/120x40/6c63ff/ffffff?text=NoiseGone" alt="NoiseGone logo" height="40" />
     </a>
   </header>
 
-  <!-- MAIN -->
+  <!-- MAIN SECTION -->
   <main class="container">
-    <!-- h1 прячем визуально, но оставляем для доступности -->
+    <!-- h1 визуально скрыт, но доступен для поисковиков и скрин-ридеров -->
     <h1>NoiseGone</h1>
     <p class="sub" data-i18n="subtitle"></p>
 
-    <!-- dropzone -->
+    <!-- Dropzone для загрузки файлов -->
     <div id="dropzone" class="dropzone" tabindex="0" aria-describedby="hint">
       <p id="hint" data-i18n="dropMessage"></p>
       <p class="formats" data-i18n="dropFormats"></p>
@@ -205,29 +207,30 @@
     </div>
     <p id="fileInfo" class="fileInfo"></p>
 
-    <!-- message box -->
+    <!-- Сообщение об ошибке или успехе -->
     <div id="messageBox"></div>
 
+    <!-- Кнопка для запуска очистки -->
     <button id="cleanBtn" class="btn" disabled data-i18n="btnClean"></button>
 
-    <!-- loading spinner -->
+    <!-- Спиннер загрузки, который будет виден во время обработки -->
     <div id="loadingSpinner" class="spinner" hidden></div>
 
-    <!-- progress -->
+    <!-- Индикатор прогресса -->
     <div id="progressWrap" class="progress" hidden>
       <div id="progressBar"></div>
     </div>
 
-    <!-- result -->
+    <!-- Раздел с результатом -->
     <div id="result" hidden>
       <p data-i18n="done"></p>
       <div class="audio-controls">
         <div class="audio-player-container">
-          <p>Оригинальный файл</p>
+          <p data-i18n="originalFile"></p>
           <audio id="originalAudio" controls></audio>
         </div>
         <div class="audio-player-container">
-          <p>Очищенный файл</p>
+          <p data-i18n="cleanedFile"></p>
           <audio id="cleanedAudio" controls></audio>
         </div>
       </div>
@@ -236,8 +239,9 @@
     </div>
   </main>
 
-  <!-- SCRIPTS -->
+  <!-- JAVASCRIPT -->
   <script>
+    // Объект для интернационализации (I18n)
     const i18n = {
       en: {
         subtitle: 'Online noise remover',
@@ -245,6 +249,8 @@
         dropFormats: 'WAV, MP3, M4A up to 50 MB',
         btnClean: 'Clean noise',
         done: 'Done.',
+        originalFile: 'Original file',
+        cleanedFile: 'Cleaned file',
         btnDownload: 'Download',
         btnNew: 'New file',
         sizeError: 'File is too large (>50 MB)',
@@ -256,15 +262,19 @@
         dropFormats: 'WAV, MP3, M4A до 50 МБ',
         btnClean: 'Очистить шум',
         done: 'Готово.',
+        originalFile: 'Оригинальный файл',
+        cleanedFile: 'Очищенный файл',
         btnDownload: 'Скачать',
         btnNew: 'Новый файл',
         sizeError: 'Файл слишком большой (>50 МБ)',
         typeError: 'Неподдерживаемый формат файла'
       }
     };
+
+    // Определение языка браузера
     const lang = navigator.language.startsWith('ru') ? 'ru' : 'en';
 
-    /* ===== UI refs ===== */
+    /* ===== DOM-элементы ===== */
     const dz = document.getElementById('dropzone');
     const fileInput = document.getElementById('fileInput');
     const fileInfo = document.getElementById('fileInfo');
@@ -279,37 +289,40 @@
     const cleanedAudio = document.getElementById('cleanedAudio');
     const loadingSpinner = document.getElementById('loadingSpinner');
 
-    /* ===== state ===== */
+    /* ===== Состояние приложения ===== */
     let selectedFile = null;
     let cleanedFileBlob = null;
 
-    /* ===== helpers ===== */
-    // Функция для перевода текста
-    function t(key) { return i18n[lang][key] || key; }
+    /* ===== Вспомогательные функции ===== */
+    // Функция для перевода текста по ключу
+    function t(key) { 
+      return i18n[lang][key] || key;
+    }
 
     // Функция для установки текстов на основе атрибута data-i18n
     function setTexts() {
-      [...document.querySelectorAll('[data-i18n]')]
+      document.querySelectorAll('[data-i18n]')
         .forEach(el => el.textContent = t(el.dataset.i18n));
     }
 
-    // Функция для вывода сообщений на экран вместо alert()
+    // Функция для отображения сообщений (вместо alert)
     function displayMessage(msg, type = 'error') {
       messageBox.textContent = msg;
       messageBox.style.color = type === 'error' ? 'var(--danger-color)' : 'var(--primary-color)';
     }
 
-    // Функция для сброса сообщений
+    // Функция для очистки сообщений
     function clearMessage() {
       messageBox.textContent = '';
     }
 
-    /* ===== dropzone ===== */
+    /* ===== Обработка событий dropzone ===== */
     function handleFiles(list) {
       clearMessage();
       if (!list || !list[0]) return;
       const f = list[0];
 
+      // Проверка на размер и тип файла
       if (f.size > 50 * 1024 * 1024) {
         displayMessage(t('sizeError'));
         return;
@@ -345,19 +358,24 @@
       handleFiles(e.dataTransfer.files);
     });
 
-    /* Глобальный preventDefault для предотвращения открытия файлов в браузере */
+    /* Предотвращение открытия файлов в браузере по умолчанию */
     ['dragover', 'drop'].forEach(ev =>
       document.addEventListener(ev, e => {
         if (e.target !== dz) e.preventDefault();
       })
     );
 
-    /* ===== clean noise (моделирование процесса) ===== */
+    /* ===== Моделирование процесса очистки ===== */
     cleanBtn.addEventListener('click', () => {
       if (!selectedFile) return;
+      
+      // Скрытие/отображение элементов UI
       cleanBtn.disabled = true;
       loadingSpinner.hidden = false;
       progressWrap.hidden = false;
+      result.hidden = true;
+
+      // Моделирование прогресса
       let prog = 0;
       const progressInterval = setInterval(() => {
         prog += 0.1;
@@ -369,20 +387,22 @@
           clearInterval(progressInterval);
           finish();
         }
-      }, 300); // Интервал для более плавной анимации
+      }, 300);
     });
 
+    // Функция, вызываемая по завершении обработки
     function finish() {
       loadingSpinner.hidden = true;
       progressWrap.hidden = true;
       result.hidden = false;
       downloadBtn.disabled = false;
       
-      // Имитация "очищенного" файла
+      // Имитация создания "очищенного" файла
       cleanedFileBlob = new Blob(['Mock cleaned audio data'], { type: 'audio/wav' });
       cleanedAudio.src = URL.createObjectURL(cleanedFileBlob);
     }
 
+    /* ===== Обработка кнопок результата ===== */
     downloadBtn.addEventListener('click', () => {
       if (!cleanedFileBlob) return;
       const ext = selectedFile.name.split('.').pop();
@@ -397,6 +417,7 @@
     });
 
     newBtn.addEventListener('click', () => {
+      // Сброс состояния приложения
       selectedFile = null;
       cleanedFileBlob = null;
       fileInfo.textContent = '';
@@ -409,8 +430,8 @@
       cleanedAudio.removeAttribute('src');
     });
 
-    /* ===== init ===== */
-    setTexts();
+    /* ===== Инициализация ===== */
+    window.onload = setTexts;
   </script>
 </body>
 </html>
