@@ -1,600 +1,419 @@
-import React, { useState, useRef, useEffect } from 'react';
+
+import React, { createContext, useContext, useState, useEffect } from 'react';
+
+// Создаем объект с переводами
+const translations = {
+  ru: {
+    logoText: 'NoiseGone',
+    heroTitle: 'Удаление шума из аудио',
+    heroSubtitle: 'Используйте наш сервис, чтобы легко очистить ваши аудиофайлы',
+    selectFile: 'Выберите файл',
+    dropMessage: 'или перетащите файл сюда',
+    processing: 'Обработка...',
+    featuresTitle: 'Наши возможности',
+    feature1Title: 'Высокая точность',
+    feature1Desc: 'Наши алгоритмы обеспечивают превосходное качество очистки.',
+    feature2Title: 'Мгновенная обработка',
+    feature2Desc: 'Получите результат за считанные секунды.',
+    feature3Title: 'Поддержка форматов',
+    feature3Desc: 'Работает с MP3, WAV, FLAC и другими популярными форматами.',
+    howItWorksTitle: 'Как это работает',
+    step1: 'Шаг 1: Загрузите аудио',
+    step1Desc: 'Выберите файл с вашего компьютера или перетащите его в область загрузки.',
+    step2: 'Шаг 2: Обработка',
+    step2Desc: 'Наши серверы обработают файл, удалив все шумы.',
+    step3: 'Шаг 3: Скачайте результат',
+    step3Desc: 'Получите чистый аудиофайл без посторонних шумов.',
+    pricingTitle: 'Тарифные планы',
+    freePlan: 'Бесплатный',
+    proPlan: 'Pro',
+    premiumPlan: 'Премиум',
+    privacyPolicy: 'Политика конфиденциальности',
+    termsOfService: 'Условия использования',
+    cookieNotice: 'Уведомление о файлах cookie',
+    copyright: '© 2024 NoiseGone. Все права защищены.',
+    download: 'Скачать',
+    reset: 'Новый файл',
+    fileSelected: 'Выбран файл:',
+    originalFile: 'Оригинальный файл',
+    cleanedFile: 'Очищенный файл',
+    sizeError: 'Файл слишком большой (>50 МБ)',
+    typeError: 'Неподдерживаемый формат файла',
+    done: 'Готово.',
+    startProcess: 'Начать'
+  },
+  en: {
+    logoText: 'NoiseGone',
+    heroTitle: 'Audio Noise Removal',
+    heroSubtitle: 'Use our service to easily clean up your audio files',
+    selectFile: 'Select a file',
+    dropMessage: 'or drag and drop here',
+    processing: 'Processing...',
+    featuresTitle: 'Our Features',
+    feature1Title: 'High Accuracy',
+    feature1Desc: 'Our algorithms ensure superior cleaning quality.',
+    feature2Title: 'Instant Processing',
+    feature2Desc: 'Get your results in a matter of seconds.',
+    feature3Title: 'Format Support',
+    feature3Desc: 'Works with MP3, WAV, FLAC and other popular formats.',
+    howItWorksTitle: 'How It Works',
+    step1: 'Step 1: Upload Audio',
+    step1Desc: 'Select a file from your computer or drag and drop it into the upload area.',
+    step2: 'Step 2: Processing',
+    step2Desc: 'Our servers will process the file, removing all noise.',
+    step3: 'Step 3: Download Result',
+    step3Desc: 'Get a clean audio file without background noise.',
+    pricingTitle: 'Pricing Plans',
+    freePlan: 'Free',
+    proPlan: 'Pro',
+    premiumPlan: 'Premium',
+    privacyPolicy: 'Privacy Policy',
+    termsOfService: 'Terms of Service',
+    cookieNotice: 'Cookie Notice',
+    copyright: '© 2024 NoiseGone. All Rights Reserved.',
+    download: 'Download',
+    reset: 'New file',
+    fileSelected: 'File selected:',
+    originalFile: 'Original file',
+    cleanedFile: 'Cleaned file',
+    sizeError: 'File is too large (>50 MB)',
+    typeError: 'File type not supported',
+    done: 'Done.',
+    startProcess: 'Start'
+  }
+};
+
+const LanguageContext = createContext();
+
+const LanguageProvider = ({ children }) => {
+  const [lang, setLang] = useState('ru'); 
+  const t = (key) => translations[lang][key] || key; 
+
+  return (
+    <LanguageContext.Provider value={{ lang, setLang, t }}>
+      {children}
+    </LanguageContext.Provider>
+  );
+};
+
+const useLanguage = () => useContext(LanguageContext);
 
 const App = () => {
+  const { lang, setLang, t } = useLanguage();
   const [selectedFile, setSelectedFile] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [cleanedFileBlob, setCleanedFileBlob] = useState(null);
+  const [error, setError] = useState('');
   const [progress, setProgress] = useState(0);
-  const [processedFile, setProcessedFile] = useState(null);
-  const [dailyMinutesUsed, setDailyMinutesUsed] = useState(2); // Mock: 2 minutes used
-  const dailyLimit = 5;
-  const fileInputRef = useRef(null);
-  const [message, setMessage] = useState(''); // State for displaying messages to the user
 
-  const i18n = {
-    ru: {
-      heroTitle: 'Удаляйте шум из аудио за секунды',
-      heroSubtitle: 'Обработка происходит прямо в вашем браузере. Быстро, качественно и безопасно.',
-      dropMessage: 'Перетащите файл сюда',
-      dropFormats: 'или выберите',
-      btnSelectFile: 'Выбрать файл',
-      featuresTitle: 'Почему стоит выбрать NoiseGone?',
-      feature1Title: 'Скорость',
-      feature1Desc: 'Обработка происходит мгновенно, без очередей.',
-      feature2Title: 'Безопасность',
-      feature2Desc: 'Аудио не загружается на сервер. Всё происходит в вашем браузере.',
-      feature3Title: 'Качество',
-      feature3Desc: 'Используем передовые алгоритмы шумоподавления для идеального результата.',
-      feature4Title: 'Бесплатно',
-      feature4Desc: `Обрабатывайте до ${dailyLimit} минут аудио в день бесплатно.`,
-      howItWorksTitle: 'Как это работает?',
-      step1: 'Загрузите',
-      step1Desc: 'Выберите файл или перетащите его в зону загрузки.',
-      step2: 'Обработка',
-      step2Desc: 'Наш алгоритм мгновенно очистит аудио от шума.',
-      step3: 'Скачайте',
-      step3Desc: 'Прослушайте результат и сохраните файл.',
-      demoTitle: 'Сравните до и после',
-      original: 'Оригинал',
-      cleaned: 'Очищено',
-      pricingTitle: 'Выберите свой план',
-      pricingFree: 'Бесплатно',
-      pricingPro: '60 мин/мес',
-      pricingPremium: '300 мин/мес',
-      pricingCTA: 'Купить',
-      faqTitle: 'Часто задаваемые вопросы',
-      faqQ1: 'Насколько это безопасно?',
-      faqA1: 'Ваши файлы обрабатываются локально в браузере и не отправляются на наши серверы.',
-      faqQ2: 'Какие форматы файлов поддерживаются?',
-      faqA2: 'Мы поддерживаем WAV, MP3 и M4A.',
-      faqQ3: 'Каковы ограничения бесплатного плана?',
-      faqA3: `Бесплатный план позволяет обрабатывать до ${dailyLimit} минут в день.`,
-      faqQ4: 'Что если я превышу лимит?',
-      faqA4: 'Вы сможете купить дополнительные минуты или подождать 24 часа для сброса лимита.',
-      footerSlogan: 'NoiseGone — шум ушёл.',
-      copyright: 'Все права защищены.',
-      language: 'Язык',
-      btnProcess: 'Обработать',
-      btnDownload: 'Скачать',
-      btnReset: 'Новый файл',
-      minutesLeft: `Осталось минут на сегодня: ${dailyLimit - dailyMinutesUsed}`,
-      limitExceeded: 'Лимит на сегодня исчерпан.',
-      sizeError: 'Размер файла превышает 50 МБ.',
-      limitError: 'Вы превысили свой дневной лимит.',
-      fileTypeError: 'Неподдерживаемый формат файла.',
-    },
-    en: {
-      heroTitle: 'Remove background noise in seconds',
-      heroSubtitle: 'Processing happens right in your browser. Fast, high-quality, and secure.',
-      dropMessage: 'Drag & drop your audio file',
-      dropFormats: 'or choose file',
-      btnSelectFile: 'Select File',
-      featuresTitle: 'Why Choose NoiseGone?',
-      feature1Title: 'Speed',
-      feature1Desc: 'Processing is instant, with no queues.',
-      feature2Title: 'Security',
-      feature2Desc: 'Your audio is not uploaded to our servers. Everything happens in your browser.',
-      feature3Title: 'Quality',
-      feature3Desc: 'We use advanced noise reduction algorithms for perfect results.',
-      feature4Title: 'Free',
-      feature4Desc: `Process up to ${dailyLimit} minutes of audio per day for free.`,
-      howItWorksTitle: 'How It Works',
-      step1: 'Upload',
-      step1Desc: 'Choose or drag & drop a file into the upload zone.',
-      step2: 'Process',
-      step2Desc: 'Our algorithm instantly cleans the audio from noise.',
-      step3: 'Download',
-      step3Desc: 'Listen to the result and save the file.',
-      demoTitle: 'Before & After Preview',
-      original: 'Original',
-      cleaned: 'Cleaned',
-      pricingTitle: 'Choose Your Plan',
-      pricingFree: 'Free',
-      pricingPro: '60 min/mo',
-      pricingPremium: '300 min/mo',
-      pricingCTA: 'Buy',
-      faqTitle: 'Frequently Asked Questions',
-      faqQ1: 'How secure is it?',
-      faqA1: 'Your files are processed locally in your browser and are not sent to our servers.',
-      faqQ2: 'What file formats are supported?',
-      faqA2: 'We support WAV, MP3, and M4A.',
-      faqQ3: 'What are the free plan limits?',
-      faqA3: `The free plan allows you to process up to ${dailyLimit} minutes per day.`,
-      faqQ4: 'What if I exceed the limit?',
-      faqA4: 'You can purchase additional minutes or wait 24 hours for the limit to reset.',
-      footerSlogan: 'NoiseGone — noise is gone.',
-      copyright: 'All Rights Reserved.',
-      language: 'Language',
-      btnProcess: 'Process',
-      btnDownload: 'Download',
-      btnReset: 'New File',
-      minutesLeft: `Minutes left for today: ${dailyLimit - dailyMinutesUsed}`,
-      limitExceeded: 'Today\'s limit has been reached.',
-      sizeError: 'File size exceeds 50 MB.',
-      limitError: 'You have exceeded your daily limit.',
-      fileTypeError: 'File type not supported.',
-    },
-    de: {
-      heroTitle: 'Hintergrundgeräusche in Sekunden entfernen',
-      heroSubtitle: 'Die Verarbeitung erfolgt direkt in Ihrem Browser. Schnell, hochwertig und sicher.',
-      dropMessage: 'Datei hierher ziehen',
-      dropFormats: 'oder auswählen',
-      btnSelectFile: 'Datei auswählen',
-      featuresTitle: 'Warum NoiseGone wählen?',
-      feature1Title: 'Geschwindigkeit',
-      feature1Desc: 'Die Verarbeitung ist sofort, ohne Warteschlangen.',
-      feature2Title: 'Sicherheit',
-      feature2Desc: 'Ihre Audioaufnahme wird nicht auf unsere Server hochgeladen. Alles geschieht in Ihrem Browser.',
-      feature3Title: 'Qualität',
-      feature3Desc: 'Wir verwenden fortschrittliche Algorithmen zur Rauschunterdrückung für ein perfektes Ergebnis.',
-      feature4Title: 'Kostenlos',
-      feature4Desc: `Bearbeiten Sie täglich bis zu ${dailyLimit} Minuten Audio kostenlos.`,
-      howItWorksTitle: 'So funktioniert es',
-      step1: 'Hochladen',
-      step1Desc: 'Wählen Sie eine Datei aus oder ziehen Sie sie in den Upload-Bereich.',
-      step2: 'Verarbeitung',
-      step2Desc: 'Unser Algorithmus reinigt das Audio sofort von Geräuschen.',
-      step3: 'Herunterladen',
-      step3Desc: 'Hören Sie sich das Ergebnis an und speichern Sie die Datei.',
-      demoTitle: 'Vorher & Nachher',
-      original: 'Original',
-      cleaned: 'Bereinigt',
-      pricingTitle: 'Wählen Sie Ihren Plan',
-      pricingFree: 'Kostenlos',
-      pricingPro: '60 Min/Monat',
-      pricingPremium: '300 Min/Monat',
-      pricingCTA: 'Kaufen',
-      faqTitle: 'Häufig gestellte Fragen',
-      faqQ1: 'Wie sicher ist es?',
-      faqA1: 'Ihre Dateien werden lokal in Ihrem Browser verarbeitet und nicht an unsere Server gesendet.',
-      faqQ2: 'Welche Dateiformate werden unterstützt?',
-      faqA2: 'Wir unterstützen WAV, MP3 und M4A.',
-      faqQ3: 'Was sind die Grenzen des kostenlosen Plans?',
-      faqA3: `Der kostenlose Plan erlaubt die Verarbeitung von bis zu ${dailyLimit} Minuten pro Tag.`,
-      faqQ4: 'Was passiert, wenn ich das Limit überschreite?',
-      faqA4: 'Sie können zusätzliche Minuten kaufen oder 24 Stunden warten, bis das Limit zurückgesetzt wird.',
-      footerSlogan: 'NoiseGone — Lärm ist weg.',
-      copyright: 'Alle Rechte vorbehalten.',
-      language: 'Sprache',
-      btnProcess: 'Verarbeiten',
-      btnDownload: 'Herunterladen',
-      btnReset: 'Neue Datei',
-      minutesLeft: `Minuten übrig für heute: ${dailyLimit - dailyMinutesUsed}`,
-      limitExceeded: 'Das heutige Limit wurde erreicht.',
-      sizeError: 'Die Dateigröße überschreitet 50 MB.',
-      limitError: 'Sie haben Ihr tägliches Limit überschritten.',
-      fileTypeError: 'Dateityp wird nicht unterstützt.',
-    },
-  };
-
-  const [lang, setLang] = useState('ru');
-  const t = (key) => i18n[lang][key] || key;
-
-  // Handles file selection and drag/drop
-  const handleFile = (file) => {
-    setMessage('');
-    if (!file) {
-      return;
-    }
-
-    // Check file type
-    const fileExtension = file.name.split('.').pop().toLowerCase();
-    const supportedFormats = ['wav', 'mp3', 'm4a'];
-    if (!supportedFormats.includes(fileExtension)) {
-      setMessage(t('fileTypeError'));
-      return;
-    }
-
-    // Check file size
-    if (file.size > 50 * 1024 * 1024) {
-      setMessage(t('sizeError'));
-      return;
-    }
-    
-    // Mock audio duration for checking against the daily limit
-    const mockDurationInSeconds = 10;
-    const mockDurationInMinutes = Math.ceil(mockDurationInSeconds / 60);
-
-    if (mockDurationInMinutes > (dailyLimit - dailyMinutesUsed)) {
-      setMessage(t('limitError'));
-      return;
-    }
-    
-    setSelectedFile(file);
-    // Mock processing
-    setIsProcessing(true);
-    setProgress(0);
-    const interval = setInterval(() => {
-      setProgress(p => {
-        const newProgress = p + 0.05;
-        if (newProgress >= 1) {
-          clearInterval(interval);
-          setIsProcessing(false);
-          // Mock cleaned file
-          setProcessedFile(new Blob(['Mock cleaned audio data'], { type: 'audio/wav' }));
-          return 1;
-        }
-        return newProgress;
-      });
-    }, 100);
-  };
-
-  const onDrop = (e) => {
-    e.preventDefault();
-    e.currentTarget.style.backgroundColor = 'rgba(243, 244, 246, 1)';
-    const file = e.dataTransfer.files[0];
-    handleFile(file);
-  };
-
-  const onDragOver = (e) => {
-    e.preventDefault();
-    e.currentTarget.style.backgroundColor = 'rgba(249, 250, 251, 1)';
-  };
-
-  const onDragLeave = (e) => {
-    e.currentTarget.style.backgroundColor = 'rgba(243, 244, 246, 1)';
-  };
-
-  const handleSelectFile = () => {
-    if (fileInputRef.current) {
-      fileInputRef.current.click();
+  const handleFileChange = (e) => {
+    setError('');
+    const file = e.target.files[0];
+    if (file) {
+      if (file.size > 50 * 1024 * 1024) {
+        setError(t('sizeError'));
+        return;
+      }
+      if (!/\.(wav|mp3|m4a)$/i.test(file.name)) {
+        setError(t('typeError'));
+        return;
+      }
+      setSelectedFile(file);
     }
   };
 
   const handleProcess = () => {
-    if (selectedFile) {
-      handleFile(selectedFile);
-    }
+    if (!selectedFile) return;
+
+    setIsProcessing(true);
+    setProgress(0);
+    setError('');
+
+    let currentProgress = 0;
+    const interval = setInterval(() => {
+      currentProgress += 10;
+      if (currentProgress >= 100) {
+        currentProgress = 100;
+        clearInterval(interval);
+        setTimeout(() => {
+          setIsProcessing(false);
+          const mockCleanedBlob = new Blob(['Mock cleaned audio data'], { type: selectedFile.type });
+          setCleanedFileBlob(mockCleanedBlob);
+        }, 500);
+      }
+      setProgress(currentProgress);
+    }, 200);
+  };
+
+  const handleNewFile = () => {
+    setSelectedFile(null);
+    setCleanedFileBlob(null);
+    setProgress(0);
+    setError('');
   };
 
   const handleDownload = () => {
-    if (processedFile) {
-      const url = URL.createObjectURL(processedFile);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `cleaned-audio.${selectedFile.name.split('.').pop()}`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    }
+    if (!cleanedFileBlob || !selectedFile) return;
+    const url = URL.createObjectURL(cleanedFileBlob);
+    const a = document.createElement('a');
+    a.href = url;
+    const ext = selectedFile.name.split('.').pop();
+    const base = selectedFile.name.replace(/\.[^/.]+$/, '');
+    a.download = `${base}.cleaned.${ext}`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   };
 
-  const handleReset = () => {
-    setSelectedFile(null);
-    setProcessedFile(null);
-    setProgress(0);
-    setIsProcessing(false);
-    setMessage('');
-  };
-  
-  const minutesLeft = dailyLimit - dailyMinutesUsed;
-
-  const baseStyle = {
-    fontFamily: 'Inter, sans-serif',
-    backgroundColor: '#fff',
-    color: '#374151',
-  };
-
-  const headerStyle = {
-    backgroundColor: '#fff',
-    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
-    padding: '1rem 2rem',
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  };
-
-  const heroSectionStyle = {
-    padding: '3rem 0',
-    textAlign: 'center',
-  };
-
-  const buttonStyle = (isPrimary) => ({
-    padding: '0.75rem 2rem',
-    borderRadius: '9999px',
-    fontWeight: 'bold',
-    transition: 'all 0.3s',
-    transform: 'scale(1)',
-    cursor: 'pointer',
-    ...(isPrimary
-      ? { backgroundColor: '#4f46e5', color: '#fff', ':hover': { backgroundColor: '#4338ca', transform: 'scale(1.05)' } }
-      : { backgroundColor: '#e5e7eb', color: '#374151', ':hover': { backgroundColor: '#d1d5db', transform: 'scale(1.05)' } }
-    ),
-  });
-
-  const sectionTitleStyle = {
-    fontSize: '2.25rem',
-    fontWeight: '800',
-    color: '#111827',
-    marginBottom: '3rem',
-    textAlign: 'center',
-  };
-
-  const cardStyle = {
-    backgroundColor: '#f9fafb',
-    padding: '1.5rem',
-    borderRadius: '1rem',
-    boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
-    transition: 'box-shadow 0.3s',
-    ':hover': { boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)' },
-  };
+  const isDesktop = window.innerWidth > 768;
 
   return (
-    <div style={baseStyle}>
-      {/* Header */}
-      <header style={headerStyle}>
-        <div style={{ display: 'flex', alignItems: 'center' }}>
-          <img src="https://placehold.co/40x40/6c63ff/ffffff?text=NG" alt="NoiseGone Logo" style={{ height: '2.5rem', width: '2.5rem', marginRight: '0.5rem', borderRadius: '0.5rem' }} />
-          <span style={{ fontWeight: 'bold', fontSize: '1.5rem', color: '#111827' }}>NoiseGone</span>
-        </div>
-        <nav style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <span style={{ color: '#4b5563' }}>{t('language')}:</span>
-            <button onClick={() => setLang('ru')} style={{ fontWeight: '600', color: lang === 'ru' ? '#111827' : '#9ca3af' }}>RU</button>
-            <button onClick={() => setLang('en')} style={{ fontWeight: '600', color: lang === 'en' ? '#111827' : '#9ca3af' }}>EN</button>
-            <button onClick={() => setLang('de')} style={{ fontWeight: '600', color: lang === 'de' ? '#111827' : '#9ca3af' }}>DE</button>
+    <div className="min-h-screen bg-gray-100 font-sans text-gray-800 antialiased">
+      <div className="max-w-4xl mx-auto bg-white rounded-2xl shadow-xl overflow-hidden p-8 space-y-12 my-8">
+        
+        {/* Header Section with Logo and Language Switcher */}
+        <header className="flex justify-between items-center pb-4 border-b border-gray-200">
+          <div className="flex items-center space-x-2">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-indigo-600" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-2-9h4v2h-4v-2zm-2-2h8v6h-8V9zm-2-2h12v10H6V7z"/>
+            </svg>
+            <span className="text-2xl font-bold text-gray-900">{t('logoText')}</span>
           </div>
-        </nav>
-      </header>
-
-      <main style={{ maxWidth: '1280px', margin: '0 auto', padding: '0 1rem', textAlign: 'center' }}>
-        {/* Hero Section */}
-        <section style={heroSectionStyle}>
-          <h1 style={{ fontSize: '3rem', fontWeight: '900', color: '#111827', lineHeight: '1.25', marginBottom: '1rem' }}>{t('heroTitle')}</h1>
-          <p style={{ fontSize: '1.125rem', color: '#4b5563', maxWidth: '42rem', margin: '0 auto 2rem' }}>{t('heroSubtitle')}</p>
-
-          {!selectedFile && (
-            <div 
-              onDrop={onDrop}
-              onDragOver={onDragOver}
-              onDragLeave={onDragLeave}
-              style={{
-                border: '4px dashed #d1d5db',
-                borderRadius: '1rem',
-                padding: '3rem',
-                marginBottom: '1.5rem',
-                cursor: 'pointer',
-                backgroundColor: '#f3f4f6',
-                transition: 'background-color 0.2s',
-              }}
-              onClick={handleSelectFile}
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={() => setLang('ru')}
+              className={`px-3 py-1 text-sm font-medium rounded-full transition-colors duration-200 ${lang === 'ru' ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
             >
-              <input 
-                type="file" 
-                ref={fileInputRef} 
-                style={{ display: 'none' }} 
-                accept=".wav,.mp3,.m4a" 
-                onChange={(e) => handleFile(e.target.files[0])} 
-              />
-              <p style={{ fontSize: '1.125rem', color: '#4b5563', fontWeight: '600' }}>{t('dropMessage')}</p>
-              <p style={{ fontSize: '0.875rem', color: '#9ca3af', marginTop: '0.25rem' }}>{t('dropFormats')}</p>
-            </div>
-          )}
+              RU
+            </button>
+            <button
+              onClick={() => setLang('en')}
+              className={`px-3 py-1 text-sm font-medium rounded-full transition-colors duration-200 ${lang === 'en' ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+            >
+              EN
+            </button>
+          </div>
+        </header>
 
-          {selectedFile && (
-            <div style={{ marginTop: '1rem' }}>
-              <p style={{ fontSize: '1.125rem', fontWeight: '500', color: '#374151' }}>{selectedFile.name}</p>
-              {!isProcessing && !processedFile && (
-                <button
-                  onClick={handleProcess}
-                  disabled={dailyLimit - dailyMinutesUsed <= 0}
-                  style={{
-                    marginTop: '1rem',
-                    padding: '0.75rem 2rem',
-                    borderRadius: '9999px',
-                    color: '#fff',
-                    fontWeight: 'bold',
-                    transition: 'all 0.3s',
-                    backgroundColor: dailyLimit - dailyMinutesUsed <= 0 ? '#9ca3af' : '#4f46e5',
-                    cursor: dailyLimit - dailyMinutesUsed <= 0 ? 'not-allowed' : 'pointer',
-                    ':hover': { transform: 'scale(1.05)' }
-                  }}
-                >
-                  {t('btnProcess')}
-                </button>
-              )}
-            </div>
-          )}
-
-          {/* Message Box for errors or other info */}
-          {message && (
-            <div style={{ marginTop: '1rem', color: '#ef4444', fontWeight: '500' }}>
-              {message}
-            </div>
-          )}
-          
-          {isProcessing && (
-            <div style={{ marginTop: '2rem' }}>
-              <p style={{ color: '#4b5563', marginBottom: '0.5rem' }}>Обработка...</p>
-              <div style={{ width: '100%', backgroundColor: '#e5e7eb', borderRadius: '9999px', height: '0.625rem' }}>
-                <div 
-                  style={{
-                    backgroundColor: '#4f46e5',
-                    height: '0.625rem',
-                    borderRadius: '9999px',
-                    transition: 'width 0.3s',
-                    width: `${progress * 100}%`,
-                  }}
-                ></div>
-              </div>
-            </div>
-          )}
+        {/* Hero Section */}
+        <section className="text-center space-y-4">
+          <h1 className="text-5xl font-bold text-gray-900 leading-tight">
+            {t('heroTitle')}
+          </h1>
+          <p className="text-xl text-gray-600">
+            {t('heroSubtitle')}
+          </p>
+          <div className="mt-8">
+            <FileUploadSection
+              selectedFile={selectedFile}
+              onFileChange={handleFileChange}
+              onProcess={handleProcess}
+              isProcessing={isProcessing}
+              progress={progress}
+              cleanedFileBlob={cleanedFileBlob}
+              onDownload={handleDownload}
+              onNewFile={handleNewFile}
+              error={error}
+            />
+          </div>
         </section>
 
         {/* Features Section */}
-        <section id="features" style={{ padding: '4rem 0' }}>
-          <h2 style={sectionTitleStyle}>{t('featuresTitle')}</h2>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: '2rem' }}>
-            <div style={cardStyle}>
-              <h3 style={{ fontSize: '1.25rem', fontWeight: 'bold', marginBottom: '0.5rem' }}>{t('feature1Title')}</h3>
-              <p style={{ color: '#4b5563' }}>{t('feature1Desc')}</p>
-            </div>
-            <div style={cardStyle}>
-              <h3 style={{ fontSize: '1.25rem', fontWeight: 'bold', marginBottom: '0.5rem' }}>{t('feature2Title')}</h3>
-              <p style={{ color: '#4b5563' }}>{t('feature2Desc')}</p>
-            </div>
-            <div style={cardStyle}>
-              <h3 style={{ fontSize: '1.25rem', fontWeight: 'bold', marginBottom: '0.5rem' }}>{t('feature3Title')}</h3>
-              <p style={{ color: '#4b5563' }}>{t('feature3Desc')}</p>
-            </div>
-            <div style={cardStyle}>
-              <h3 style={{ fontSize: '1.25rem', fontWeight: 'bold', marginBottom: '0.5rem' }}>{t('feature4Title')}</h3>
-              <p style={{ color: '#4b5563' }}>{t('feature4Desc')}</p>
-            </div>
+        <section className="space-y-6">
+          <h2 className="text-3xl font-bold text-center text-gray-900">
+            {t('featuresTitle')}
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 text-center">
+            <FeatureCard titleKey="feature1Title" descKey="feature1Desc" />
+            <FeatureCard titleKey="feature2Title" descKey="feature2Desc" />
+            <FeatureCard titleKey="feature3Title" descKey="feature3Desc" />
           </div>
         </section>
-        
+
         {/* How It Works Section */}
-        <section style={{ padding: '4rem 0' }}>
-          <h2 style={sectionTitleStyle}>{t('howItWorksTitle')}</h2>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '2rem' }}>
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-              <div style={{ width: '4rem', height: '4rem', borderRadius: '9999px', backgroundColor: '#e0e7ff', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1rem' }}>
-                <span style={{ fontSize: '1.875rem' }}>1</span>
-              </div>
-              <h3 style={{ fontSize: '1.25rem', fontWeight: 'bold' }}>{t('step1')}</h3>
-              <p style={{ color: '#4b5563', fontSize: '0.875rem', marginTop: '0.25rem' }}>{t('step1Desc')}</p>
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-              <div style={{ width: '4rem', height: '4rem', borderRadius: '9999px', backgroundColor: '#e0e7ff', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1rem' }}>
-                <span style={{ fontSize: '1.875rem' }}>2</span>
-              </div>
-              <h3 style={{ fontSize: '1.25rem', fontWeight: 'bold' }}>{t('step2')}</h3>
-              <p style={{ color: '#4b5563', fontSize: '0.875rem', marginTop: '0.25rem' }}>{t('step2Desc')}</p>
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-              <div style={{ width: '4rem', height: '4rem', borderRadius: '9999px', backgroundColor: '#e0e7ff', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1rem' }}>
-                <span style={{ fontSize: '1.875rem' }}>3</span>
-              </div>
-              <h3 style={{ fontSize: '1.25rem', fontWeight: 'bold' }}>{t('step3')}</h3>
-              <p style={{ color: '#4b5563', fontSize: '0.875rem', marginTop: '0.25rem' }}>{t('step3Desc')}</p>
-            </div>
-          </div>
-        </section>
-        
-        {/* Demo Section (A/B player) */}
-        {processedFile && (
-          <section style={{ padding: '4rem 0' }}>
-            <h2 style={{ fontSize: '2.25rem', fontWeight: '800', color: '#111827', marginBottom: '2rem', textAlign: 'center' }}>{t('demoTitle')}</h2>
-            <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', gap: '2rem' }}>
-              <div style={{ backgroundColor: '#f9fafb', padding: '1.5rem', borderRadius: '1rem', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}>
-                <h3 style={{ fontWeight: 'bold', fontSize: '1.125rem', marginBottom: '1rem' }}>{t('original')}</h3>
-                <audio controls style={{ width: '100%', maxWidth: '24rem' }}>
-                  <source src={URL.createObjectURL(selectedFile)} type={selectedFile.type} />
-                  Your browser does not support the audio element.
-                </audio>
-              </div>
-              <div style={{ backgroundColor: '#f9fafb', padding: '1.5rem', borderRadius: '1rem', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}>
-                <h3 style={{ fontWeight: 'bold', fontSize: '1.125rem', marginBottom: '1rem' }}>{t('cleaned')}</h3>
-                <audio controls style={{ width: '100%', maxWidth: '24rem' }}>
-                  <source src={URL.createObjectURL(processedFile)} type={processedFile.type} />
-                  Your browser does not support the audio element.
-                </audio>
-              </div>
-            </div>
-            <div style={{ marginTop: '2rem', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', gap: '1rem' }}>
-              <button 
-                onClick={handleDownload}
-                style={{ ...buttonStyle(true), width: 'auto' }}
-              >
-                {t('btnDownload')}
-              </button>
-              <button 
-                onClick={handleReset}
-                style={{ ...buttonStyle(false), width: 'auto' }}
-              >
-                {t('btnReset')}
-              </button>
-            </div>
-          </section>
-        )}
-        
-        {/* Pricing Section */}
-        <section id="pricing" style={{ padding: '4rem 0' }}>
-          <h2 style={sectionTitleStyle}>{t('pricingTitle')}</h2>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '2rem' }}>
-            {/* Free Plan */}
-            <div style={{ ...cardStyle, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-              <h3 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '0.5rem' }}>{t('pricingFree')}</h3>
-              <p style={{ fontSize: '2.25rem', fontWeight: '800', color: '#111827', marginBottom: '1rem' }}>
-                <span style={{ fontSize: '1.125rem', fontWeight: 'normal' }}>до</span> 5 <span style={{ fontSize: '1.125rem', fontWeight: 'normal' }}>мин/день</span>
-              </p>
-              <ul style={{ color: '#4b5563', textAlign: 'left', width: '100%', marginBottom: '1.5rem', listStyleType: 'disc', paddingLeft: '1.5rem' }}>
-                <li>Обработка в браузере</li>
-                <li>Не требуется регистрация</li>
-                <li>Ограниченный лимит</li>
-              </ul>
-              <button style={{ ...buttonStyle(true), width: '100%', opacity: 0.5, cursor: 'not-allowed' }}>
-                {t('pricingFree')}
-              </button>
-            </div>
-            {/* Pro Plan */}
-            <div style={{ backgroundColor: '#4f46e5', color: '#fff', padding: '2rem', borderRadius: '1rem', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)', display: 'flex', flexDirection: 'column', alignItems: 'center', transform: 'scale(1.05)' }}>
-              <h3 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '0.5rem' }}>{t('pricingPro')}</h3>
-              <p style={{ fontSize: '2.25rem', fontWeight: '800', marginBottom: '1rem' }}>
-                <span style={{ fontSize: '1.125rem', fontWeight: 'normal' }}>от</span> 60 <span style={{ fontSize: '1.125rem', fontWeight: 'normal' }}>мин/мес</span>
-              </p>
-              <ul style={{ color: '#fff', textAlign: 'left', width: '100%', marginBottom: '1.5rem', listStyleType: 'disc', paddingLeft: '1.5rem' }}>
-                <li>Безлимитная обработка</li>
-                <li>Доступ к серверным моделям</li>
-                <li>Техническая поддержка</li>
-              </ul>
-              <button style={{ ...buttonStyle(false), backgroundColor: '#fff', color: '#4f46e5' }}>
-                {t('pricingCTA')}
-              </button>
-            </div>
-            {/* Premium Plan */}
-            <div style={{ ...cardStyle, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-              <h3 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '0.5rem' }}>{t('pricingPremium')}</h3>
-              <p style={{ fontSize: '2.25rem', fontWeight: '800', color: '#111827', marginBottom: '1rem' }}>
-                <span style={{ fontSize: '1.125rem', fontWeight: 'normal' }}>от</span> 300 <span style={{ fontSize: '1.125rem', fontWeight: 'normal' }}>мин/мес</span>
-              </p>
-              <ul style={{ color: '#4b5563', textAlign: 'left', width: '100%', marginBottom: '1.5rem', listStyleType: 'disc', paddingLeft: '1.5rem' }}>
-                <li>Всё из Pro-плана</li>
-                <li>Приоритетная обработка</li>
-                <li>Пакетная обработка</li>
-              </ul>
-              <button style={{ ...buttonStyle(true), width: '100%' }}>
-                {t('pricingCTA')}
-              </button>
-            </div>
+        <section className="space-y-6">
+          <h2 className="text-3xl font-bold text-center text-gray-900">
+            {t('howItWorksTitle')}
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <StepCard stepNumber="1" titleKey="step1" descKey="step1Desc" />
+            <StepCard stepNumber="2" titleKey="step2" descKey="step2Desc" />
+            <StepCard stepNumber="3" titleKey="step3" descKey="step3Desc" />
           </div>
         </section>
 
-        {/* FAQ Section */}
-        <section id="faq" style={{ padding: '4rem 0', textAlign: 'left' }}>
-          <h2 style={{ ...sectionTitleStyle, textAlign: 'center' }}>{t('faqTitle')}</h2>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-            <div>
-              <h3 style={{ fontWeight: 'bold', fontSize: '1.125rem' }}>{t('faqQ1')}</h3>
-              <p style={{ color: '#4b5563', marginTop: '0.5rem' }}>{t('faqA1')}</p>
-            </div>
-            <div>
-              <h3 style={{ fontWeight: 'bold', fontSize: '1.125rem' }}>{t('faqQ2')}</h3>
-              <p style={{ color: '#4b5563', marginTop: '0.5rem' }}>{t('faqA2')}</p>
-            </div>
-            <div>
-              <h3 style={{ fontWeight: 'bold', fontSize: '1.125rem' }}>{t('faqQ3')}</h3>
-              <p style={{ color: '#4b5563', marginTop: '0.5rem' }}>{t('faqA3')}</p>
-            </div>
-            <div>
-              <h3 style={{ fontWeight: 'bold', fontSize: '1.125rem' }}>{t('faqQ4')}</h3>
-              <p style={{ color: '#4b5563', marginTop: '0.5rem' }}>{t('faqA4')}</p>
-            </div>
+        {/* Pricing Section - Simplified for this example */}
+        <section className="space-y-6">
+          <h2 className="text-3xl font-bold text-center text-gray-900">
+            {t('pricingTitle')}
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <PricingCard titleKey="freePlan" />
+            <PricingCard titleKey="proPlan" />
+            <PricingCard titleKey="premiumPlan" />
           </div>
         </section>
-      </main>
 
-      {/* Footer */}
-      <footer style={{ backgroundColor: '#1f2937', color: '#9ca3af', padding: '3rem 2rem', textAlign: 'center' }}>
-        <p style={{ marginBottom: '0.5rem', fontWeight: 'bold', fontSize: '1.125rem', color: '#fff' }}>{t('footerSlogan')}</p>
-        <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', marginBottom: '1rem' }}>
-          <a href="#" style={{ ':hover': { color: '#fff' } }}>Privacy Policy</a>
-          <a href="#" style={{ ':hover': { color: '#fff' } }}>Terms of Service</a>
-          <a href="#" style={{ ':hover': { color: '#fff' } }}>Cookie Notice</a>
+        {/* Footer Section - Simplified for this example */}
+        <footer className="text-center text-sm text-gray-500 space-y-2 pt-8 border-t border-gray-200">
+          <div>
+            <a href="#" className="hover:underline mx-2">{t('privacyPolicy')}</a>
+            <a href="#" className="hover:underline mx-2">{t('termsOfService')}</a>
+            <a href="#" className="hover:underline mx-2">{t('cookieNotice')}</a>
+          </div>
+          <p>{t('copyright')}</p>
+        </footer>
+      </div>
+    </div>
+  );
+};
+
+const FileUploadSection = ({ selectedFile, onFileChange, onProcess, isProcessing, progress, cleanedFileBlob, onDownload, onNewFile, error }) => {
+  const { t } = useLanguage();
+  const [isHovering, setIsHovering] = useState(false);
+
+  return (
+    <div className="flex flex-col items-center space-y-4">
+      {selectedFile && !isProcessing && !cleanedFileBlob && (
+        <div className="text-sm font-medium text-gray-600">
+          <p>{t('fileSelected')} {selectedFile.name}</p>
         </div>
-        <p style={{ fontSize: '0.875rem' }}>{t('copyright')}</p>
-      </footer>
+      )}
+
+      {isProcessing && (
+        <div className="w-full max-w-lg">
+          <p className="text-center text-sm font-semibold text-indigo-600 mb-2">{t('processing')}</p>
+          <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+            <div
+              className="h-full bg-indigo-600 transition-all duration-300"
+              style={{ width: `${progress}%` }}
+            ></div>
+          </div>
+        </div>
+      )}
+
+      {cleanedFileBlob && (
+        <div className="w-full max-w-lg space-y-4">
+          <p className="text-lg font-bold text-center text-indigo-600">{t('done')}</p>
+          <div className="flex flex-col md:flex-row justify-center items-center gap-4">
+            <div className="flex flex-col items-center">
+              <span className="text-sm text-gray-500 mb-1">{t('originalFile')}</span>
+              <audio controls src={URL.createObjectURL(selectedFile)} className="w-full"></audio>
+            </div>
+            <div className="flex flex-col items-center">
+              <span className="text-sm text-gray-500 mb-1">{t('cleanedFile')}</span>
+              <audio controls src={URL.createObjectURL(cleanedFileBlob)} className="w-full"></audio>
+            </div>
+          </div>
+          <div className="flex justify-center space-x-4">
+            <button
+              onClick={onDownload}
+              className="bg-green-500 text-white font-semibold py-2 px-6 rounded-full shadow-lg hover:bg-green-600 transition-colors"
+            >
+              {t('download')}
+            </button>
+            <button
+              onClick={onNewFile}
+              className="bg-gray-200 text-gray-700 font-semibold py-2 px-6 rounded-full shadow-lg hover:bg-gray-300 transition-colors"
+            >
+              {t('reset')}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {!selectedFile && (
+        <label
+          htmlFor="fileInput"
+          className={`w-full max-w-lg p-10 text-center border-2 border-dashed rounded-xl cursor-pointer transition-colors duration-200 ${
+            isHovering ? 'border-indigo-600 bg-indigo-50' : 'border-gray-300 bg-white'
+          }`}
+          onDragOver={() => setIsHovering(true)}
+          onDragLeave={() => setIsHovering(false)}
+          onDrop={() => setIsHovering(false)}
+        >
+          <input
+            type="file"
+            id="fileInput"
+            className="hidden"
+            onChange={onFileChange}
+            accept=".wav,.mp3,.m4a"
+          />
+          <svg className="mx-auto h-12 w-12 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v9" />
+          </svg>
+          <p className="mt-2 text-sm text-gray-600">{t('dropMessage')}</p>
+          <p className="text-xs text-gray-400">WAV, MP3, M4A up to 50 MB</p>
+        </label>
+      )}
+
+      {error && (
+        <p className="text-red-500 text-sm font-medium mt-2">{error}</p>
+      )}
+
+      {!isProcessing && !cleanedFileBlob && selectedFile && !error && (
+        <button
+          onClick={onProcess}
+          className="bg-indigo-600 text-white font-semibold py-3 px-8 rounded-full shadow-lg hover:bg-indigo-700 transition-colors"
+          disabled={!selectedFile}
+        >
+          {t('startProcess')}
+        </button>
+      )}
+    </div>
+  );
+};
+
+// Вспомогательные компоненты для демонстрации структуры
+const FeatureCard = ({ titleKey, descKey }) => {
+  const { t } = useLanguage();
+  return (
+    <div className="p-6 bg-gray-50 rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300">
+      <h3 className="text-xl font-bold mb-2 text-indigo-600">
+        {t(titleKey)}
+      </h3>
+      <p className="text-gray-600">
+        {t(descKey)}
+      </p>
+    </div>
+  );
+};
+
+const StepCard = ({ stepNumber, titleKey, descKey }) => {
+  const { t } = useLanguage();
+  return (
+    <div className="flex flex-col items-center text-center p-6 bg-white rounded-lg shadow-md">
+      <div className="w-12 h-12 flex items-center justify-center bg-indigo-500 text-white rounded-full text-2xl font-bold mb-4">
+        {stepNumber}
+      </div>
+      <h3 className="text-xl font-semibold mb-2 text-gray-900">
+        {t(titleKey)}
+      </h3>
+      <p className="text-gray-600">
+        {t(descKey)}
+      </p>
+    </div>
+  );
+};
+
+const PricingCard = ({ titleKey }) => {
+  const { t } = useLanguage();
+  return (
+    <div className="p-6 bg-white rounded-lg shadow-xl border-2 border-transparent hover:border-indigo-500 transition-colors duration-300">
+      <h3 className="text-2xl font-bold text-center text-gray-900 mb-4">
+        {t(titleKey)}
+      </h3>
+      <ul className="list-disc list-inside text-gray-600 space-y-2">
+        <li>Место для хранения</li>
+        <li>Поддержка</li>
+        <li>Без рекламы</li>
+      </ul>
+      <div className="text-center mt-6">
+        <button className="bg-indigo-600 text-white font-bold py-3 px-8 rounded-full shadow-lg hover:bg-indigo-700 transition-colors duration-300">
+          Выбрать
+        </button>
+      </div>
     </div>
   );
 };
