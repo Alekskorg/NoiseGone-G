@@ -1,437 +1,505 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>NoiseGone — Онлайн очистка шума</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
-  <style>
-    /* CSS-стили для оформления */
-    :root {
-      --primary-color: #6c63ff;
-      --text-color: #333;
-      --bg-color: #f4f4f9;
-      --dropzone-bg: #fff;
-      --dropzone-border: #ccc;
-      --dropzone-hover: #e6e6fa;
-      --progress-bg: #e0e0e0;
-      --progress-bar: var(--primary-color);
-      --btn-bg: var(--primary-color);
-      --btn-text: #fff;
-      --danger-color: #f44336;
-    }
-    body {
-      font-family: 'Inter', sans-serif;
-      margin: 0;
-      padding: 0;
-      background-color: var(--bg-color);
-      color: var(--text-color);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      min-height: 100vh;
-      box-sizing: border-box;
-    }
-    .site-header {
-      width: 100%;
-      background-color: #fff;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-      padding: 16px 20px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .brand {
-      height: 40px;
-    }
-    .container {
-      max-width: 600px;
-      width: 100%;
-      padding: 24px;
-      text-align: center;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 16px;
-      flex-grow: 1;
-      justify-content: center;
-    }
-    h1 {
-      position: absolute;
-      left: -9999px;
-      top: auto;
-      width: 1px;
-      height: 1px;
-      overflow: hidden;
-    }
-    .sub {
-      font-size: 1.25rem;
-      font-weight: 600;
-      color: #555;
-    }
-    .dropzone {
-      width: 100%;
-      height: 200px;
-      border: 2px dashed var(--dropzone-border);
-      border-radius: 12px;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      cursor: pointer;
-      transition: background-color 0.3s ease;
-      background-color: var(--dropzone-bg);
-    }
-    .dropzone.hover {
-      background-color: var(--dropzone-hover);
-      border-color: var(--primary-color);
-    }
-    #hint {
-      font-size: 1rem;
-      font-weight: 600;
-      margin: 0;
-    }
-    .formats {
-      font-size: 0.875rem;
-      color: #999;
-      margin: 4px 0 0;
-    }
-    .fileInfo {
-      font-weight: 600;
-      margin: 0;
-      min-height: 1em;
-    }
-    .btn {
-      padding: 12px 24px;
-      border: none;
-      border-radius: 8px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: background-color 0.3s ease, transform 0.1s ease;
-      font-size: 1rem;
-    }
-    #cleanBtn {
-      background-color: var(--btn-bg);
-      color: var(--btn-text);
-    }
-    #cleanBtn:disabled {
-      background-color: #ccc;
-      cursor: not-allowed;
-    }
-    #downloadBtn {
-      background-color: var(--primary-color);
-      color: #fff;
-    }
-    #newBtn {
-      background-color: #f0f0f0;
-      color: #555;
-    }
-    .progress {
-      width: 100%;
-      height: 24px;
-      background-color: var(--progress-bg);
-      border-radius: 12px;
-      overflow: hidden;
-      margin-top: 16px;
-    }
-    #progressBar {
-      height: 100%;
-      width: 0%;
-      background-color: var(--progress-bar);
-      transition: width 0.3s ease;
-    }
-    #result {
-      text-align: center;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 16px;
-    }
-    #messageBox {
-      min-height: 20px;
-      font-weight: 600;
-      text-align: center;
-      color: var(--danger-color);
-    }
-    .audio-controls {
-      display: flex;
-      gap: 16px;
-      margin-top: 20px;
-      justify-content: center;
-      flex-wrap: wrap;
-    }
-    .audio-player-container {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-    .spinner {
-      border: 4px solid rgba(0, 0, 0, 0.1);
-      width: 36px;
-      height: 36px;
-      border-radius: 50%;
-      border-left-color: var(--primary-color);
-      animation: spin 1s ease infinite;
-      margin-top: 16px;
-    }
-    @keyframes spin {
-      0% {
-        transform: rotate(0deg);
-      }
-      100% {
-        transform: rotate(360deg);
-      }
-    }
-  </style>
-</head>
-<body>
-  <!-- HEADER с логотипом -->
-  <header class="site-header">
-    <a href="/" class="brand" aria-label="NoiseGone">
-      <!-- Использование placeholder-изображения для простоты, можно заменить на реальное -->
-      <img src="https://placehold.co/120x40/6c63ff/ffffff?text=NoiseGone" alt="NoiseGone logo" height="40" />
-    </a>
-  </header>
+import React, { useState, useRef, useEffect } from 'react';
 
-  <!-- MAIN SECTION -->
-  <main class="container">
-    <!-- h1 визуально скрыт, но доступен для поисковиков и скрин-ридеров -->
-    <h1>NoiseGone</h1>
-    <p class="sub" data-i18n="subtitle"></p>
+// Main App Component
+const App = () => {
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [processedFile, setProcessedFile] = useState(null);
+  const [dailyMinutesUsed, setDailyMinutesUsed] = useState(2); // Mock: 2 minutes used
+  const dailyLimit = 5;
+  const fileInputRef = useRef(null);
 
-    <!-- Dropzone для загрузки файлов -->
-    <div id="dropzone" class="dropzone" tabindex="0" aria-describedby="hint">
-      <p id="hint" data-i18n="dropMessage"></p>
-      <p class="formats" data-i18n="dropFormats"></p>
-      <input type="file" id="fileInput" accept=".wav,.mp3,.m4a" hidden />
-    </div>
-    <p id="fileInfo" class="fileInfo"></p>
+  const i18n = {
+    ru: {
+      heroTitle: 'Удаляйте шум из аудио за секунды',
+      heroSubtitle: 'Обработка происходит прямо в вашем браузере. Быстро, качественно и безопасно.',
+      dropMessage: 'Перетащите файл сюда',
+      dropFormats: 'или выберите',
+      btnSelectFile: 'Выбрать файл',
+      featuresTitle: 'Почему стоит выбрать NoiseGone?',
+      feature1Title: 'Скорость',
+      feature1Desc: 'Обработка происходит мгновенно, без очередей.',
+      feature2Title: 'Безопасность',
+      feature2Desc: 'Аудио не загружается на сервер. Всё происходит в вашем браузере.',
+      feature3Title: 'Качество',
+      feature3Desc: 'Используем передовые алгоритмы шумоподавления для идеального результата.',
+      feature4Title: 'Бесплатно',
+      feature4Desc: `Обрабатывайте до ${dailyLimit} минут аудио в день бесплатно.`,
+      howItWorksTitle: 'Как это работает?',
+      step1: 'Загрузите',
+      step1Desc: 'Выберите файл или перетащите его в зону загрузки.',
+      step2: 'Обработка',
+      step2Desc: 'Наш алгоритм мгновенно очистит аудио от шума.',
+      step3: 'Скачайте',
+      step3Desc: 'Прослушайте результат и сохраните файл.',
+      demoTitle: 'Сравните до и после',
+      original: 'Оригинал',
+      cleaned: 'Очищено',
+      pricingTitle: 'Выберите свой план',
+      pricingFree: 'Бесплатно',
+      pricingPro: '60 мин/мес',
+      pricingPremium: '300 мин/мес',
+      pricingCTA: 'Купить',
+      faqTitle: 'Часто задаваемые вопросы',
+      faqQ1: 'Насколько это безопасно?',
+      faqA1: 'Ваши файлы обрабатываются локально в браузере и не отправляются на наши серверы.',
+      faqQ2: 'Какие форматы файлов поддерживаются?',
+      faqA2: 'Мы поддерживаем WAV, MP3 и M4A.',
+      faqQ3: 'Каковы ограничения бесплатного плана?',
+      faqA3: `Бесплатный план позволяет обрабатывать до ${dailyLimit} минут в день.`,
+      faqQ4: 'Что если я превышу лимит?',
+      faqA4: 'Вы сможете купить дополнительные минуты или подождать 24 часа для сброса лимита.',
+      footerSlogan: 'NoiseGone — шум ушёл.',
+      copyright: 'Все права защищены.',
+      language: 'Язык',
+      btnProcess: 'Обработать',
+      btnDownload: 'Скачать',
+      btnReset: 'Новый файл',
+      minutesLeft: `Осталось минут на сегодня: ${dailyLimit - dailyMinutesUsed}`,
+      limitExceeded: 'Лимит на сегодня исчерпан.',
+    },
+    en: {
+      heroTitle: 'Remove background noise in seconds',
+      heroSubtitle: 'Processing happens right in your browser. Fast, high-quality, and secure.',
+      dropMessage: 'Drag & drop your audio file',
+      dropFormats: 'or choose file',
+      btnSelectFile: 'Select File',
+      featuresTitle: 'Why Choose NoiseGone?',
+      feature1Title: 'Speed',
+      feature1Desc: 'Processing is instant, with no queues.',
+      feature2Title: 'Security',
+      feature2Desc: 'Your audio is not uploaded to our servers. Everything happens in your browser.',
+      feature3Title: 'Quality',
+      feature3Desc: 'We use advanced noise reduction algorithms for perfect results.',
+      feature4Title: 'Free',
+      feature4Desc: `Process up to ${dailyLimit} minutes of audio per day for free.`,
+      howItWorksTitle: 'How It Works',
+      step1: 'Upload',
+      step1Desc: 'Choose or drag & drop a file into the upload zone.',
+      step2: 'Process',
+      step2Desc: 'Our algorithm instantly cleans the audio from noise.',
+      step3: 'Download',
+      step3Desc: 'Listen to the result and save the file.',
+      demoTitle: 'Before & After Preview',
+      original: 'Original',
+      cleaned: 'Cleaned',
+      pricingTitle: 'Choose Your Plan',
+      pricingFree: 'Free',
+      pricingPro: '60 min/mo',
+      pricingPremium: '300 min/mo',
+      pricingCTA: 'Buy',
+      faqTitle: 'Frequently Asked Questions',
+      faqQ1: 'How secure is it?',
+      faqA1: 'Your files are processed locally in your browser and are not sent to our servers.',
+      faqQ2: 'What file formats are supported?',
+      faqA2: 'We support WAV, MP3, and M4A.',
+      faqQ3: 'What are the free plan limits?',
+      faqA3: `The free plan allows you to process up to ${dailyLimit} minutes per day.`,
+      faqQ4: 'What if I exceed the limit?',
+      faqA4: 'You can purchase additional minutes or wait 24 hours for the limit to reset.',
+      footerSlogan: 'NoiseGone — noise is gone.',
+      copyright: 'All Rights Reserved.',
+      language: 'Language',
+      btnProcess: 'Process',
+      btnDownload: 'Download',
+      btnReset: 'New File',
+      minutesLeft: `Minutes left for today: ${dailyLimit - dailyMinutesUsed}`,
+      limitExceeded: 'Today\'s limit has been reached.',
+    },
+    de: {
+      heroTitle: 'Hintergrundgeräusche in Sekunden entfernen',
+      heroSubtitle: 'Die Verarbeitung erfolgt direkt in Ihrem Browser. Schnell, hochwertig und sicher.',
+      dropMessage: 'Datei hierher ziehen',
+      dropFormats: 'oder auswählen',
+      btnSelectFile: 'Datei auswählen',
+      featuresTitle: 'Warum NoiseGone wählen?',
+      feature1Title: 'Geschwindigkeit',
+      feature1Desc: 'Die Verarbeitung ist sofort, ohne Warteschlangen.',
+      feature2Title: 'Sicherheit',
+      feature2Desc: 'Ihre Audioaufnahme wird nicht auf unsere Server hochgeladen. Alles geschieht in Ihrem Browser.',
+      feature3Title: 'Qualität',
+      feature3Desc: 'Wir verwenden fortschrittliche Algorithmen zur Rauschunterdrückung für ein perfektes Ergebnis.',
+      feature4Title: 'Kostenlos',
+      feature4Desc: `Bearbeiten Sie täglich bis zu ${dailyLimit} Minuten Audio kostenlos.`,
+      howItWorksTitle: 'So funktioniert es',
+      step1: 'Hochladen',
+      step1Desc: 'Wählen Sie eine Datei aus oder ziehen Sie sie in den Upload-Bereich.',
+      step2: 'Verarbeitung',
+      step2Desc: 'Unser Algorithmus reinigt das Audio sofort von Geräuschen.',
+      step3: 'Herunterladen',
+      step3Desc: 'Hören Sie sich das Ergebnis an und speichern Sie die Datei.',
+      demoTitle: 'Vorher & Nachher',
+      original: 'Original',
+      cleaned: 'Bereinigt',
+      pricingTitle: 'Wählen Sie Ihren Plan',
+      pricingFree: 'Kostenlos',
+      pricingPro: '60 Min/Monat',
+      pricingPremium: '300 Min/Monat',
+      pricingCTA: 'Kaufen',
+      faqTitle: 'Häufig gestellte Fragen',
+      faqQ1: 'Wie sicher ist es?',
+      faqA1: 'Ihre Dateien werden lokal in Ihrem Browser verarbeitet und nicht an unsere Server gesendet.',
+      faqQ2: 'Welche Dateiformate werden unterstützt?',
+      faqA2: 'Wir unterstützen WAV, MP3 und M4A.',
+      faqQ3: 'Was sind die Grenzen des kostenlosen Plans?',
+      faqA3: `Der kostenlose Plan erlaubt die Verarbeitung von bis zu ${dailyLimit} Minuten pro Tag.`,
+      faqQ4: 'Was passiert, wenn ich das Limit überschreite?',
+      faqA4: 'Sie können zusätzliche Minuten kaufen oder 24 Stunden warten, bis das Limit zurückgesetzt wird.',
+      footerSlogan: 'NoiseGone — Lärm ist weg.',
+      copyright: 'Alle Rechte vorbehalten.',
+      language: 'Sprache',
+      btnProcess: 'Verarbeiten',
+      btnDownload: 'Herunterladen',
+      btnReset: 'Neue Datei',
+      minutesLeft: `Minuten übrig für heute: ${dailyLimit - dailyMinutesUsed}`,
+      limitExceeded: 'Das heutige Limit wurde erreicht.',
+    },
+  };
 
-    <!-- Сообщение об ошибке или успехе -->
-    <div id="messageBox"></div>
+  const [lang, setLang] = useState('ru');
+  const t = (key) => i18n[lang][key] || key;
 
-    <!-- Кнопка для запуска очистки -->
-    <button id="cleanBtn" class="btn" disabled data-i18n="btnClean"></button>
+  // Handles file selection and drag/drop
+  const handleFile = (file) => {
+    if (!file) return;
 
-    <!-- Спиннер загрузки, который будет виден во время обработки -->
-    <div id="loadingSpinner" class="spinner" hidden></div>
-
-    <!-- Индикатор прогресса -->
-    <div id="progressWrap" class="progress" hidden>
-      <div id="progressBar"></div>
-    </div>
-
-    <!-- Раздел с результатом -->
-    <div id="result" hidden>
-      <p data-i18n="done"></p>
-      <div class="audio-controls">
-        <div class="audio-player-container">
-          <p data-i18n="originalFile"></p>
-          <audio id="originalAudio" controls></audio>
-        </div>
-        <div class="audio-player-container">
-          <p data-i18n="cleanedFile"></p>
-          <audio id="cleanedAudio" controls></audio>
-        </div>
-      </div>
-      <button id="downloadBtn" class="btn" data-i18n="btnDownload"></button>
-      <button id="newBtn" class="btn" data-i18n="btnNew"></button>
-    </div>
-  </main>
-
-  <!-- JAVASCRIPT -->
-  <script>
-    // Объект для интернационализации (I18n)
-    const i18n = {
-      en: {
-        subtitle: 'Online noise remover',
-        dropMessage: 'Drag & drop or choose file',
-        dropFormats: 'WAV, MP3, M4A up to 50 MB',
-        btnClean: 'Clean noise',
-        done: 'Done.',
-        originalFile: 'Original file',
-        cleanedFile: 'Cleaned file',
-        btnDownload: 'Download',
-        btnNew: 'New file',
-        sizeError: 'File is too large (>50 MB)',
-        typeError: 'File type not supported'
-      },
-      ru: {
-        subtitle: 'Онлайн очистка шума',
-        dropMessage: 'Перетащите файл сюда или выберите',
-        dropFormats: 'WAV, MP3, M4A до 50 МБ',
-        btnClean: 'Очистить шум',
-        done: 'Готово.',
-        originalFile: 'Оригинальный файл',
-        cleanedFile: 'Очищенный файл',
-        btnDownload: 'Скачать',
-        btnNew: 'Новый файл',
-        sizeError: 'Файл слишком большой (>50 МБ)',
-        typeError: 'Неподдерживаемый формат файла'
-      }
-    };
-
-    // Определение языка браузера
-    const lang = navigator.language.startsWith('ru') ? 'ru' : 'en';
-
-    /* ===== DOM-элементы ===== */
-    const dz = document.getElementById('dropzone');
-    const fileInput = document.getElementById('fileInput');
-    const fileInfo = document.getElementById('fileInfo');
-    const cleanBtn = document.getElementById('cleanBtn');
-    const progressWrap = document.getElementById('progressWrap');
-    const progressBar = document.getElementById('progressBar');
-    const result = document.getElementById('result');
-    const downloadBtn = document.getElementById('downloadBtn');
-    const newBtn = document.getElementById('newBtn');
-    const messageBox = document.getElementById('messageBox');
-    const originalAudio = document.getElementById('originalAudio');
-    const cleanedAudio = document.getElementById('cleanedAudio');
-    const loadingSpinner = document.getElementById('loadingSpinner');
-
-    /* ===== Состояние приложения ===== */
-    let selectedFile = null;
-    let cleanedFileBlob = null;
-
-    /* ===== Вспомогательные функции ===== */
-    // Функция для перевода текста по ключу
-    function t(key) { 
-      return i18n[lang][key] || key;
+    if (file.size > 50 * 1024 * 1024) {
+      alert('File size exceeds 50 MB.');
+      return;
     }
 
-    // Функция для установки текстов на основе атрибута data-i18n
-    function setTexts() {
-      document.querySelectorAll('[data-i18n]')
-        .forEach(el => el.textContent = t(el.dataset.i18n));
+    const duration = 60 * 10; // Mock 10-second duration for demo
+    if (duration > (dailyLimit - dailyMinutesUsed) * 60) {
+      alert('You have exceeded your daily limit.');
+      return;
     }
-
-    // Функция для отображения сообщений (вместо alert)
-    function displayMessage(msg, type = 'error') {
-      messageBox.textContent = msg;
-      messageBox.style.color = type === 'error' ? 'var(--danger-color)' : 'var(--primary-color)';
-    }
-
-    // Функция для очистки сообщений
-    function clearMessage() {
-      messageBox.textContent = '';
-    }
-
-    /* ===== Обработка событий dropzone ===== */
-    function handleFiles(list) {
-      clearMessage();
-      if (!list || !list[0]) return;
-      const f = list[0];
-
-      // Проверка на размер и тип файла
-      if (f.size > 50 * 1024 * 1024) {
-        displayMessage(t('sizeError'));
-        return;
-      }
-      if (!/\.(wav|mp3|m4a)$/i.test(f.name)) {
-        displayMessage(t('typeError'));
-        return;
-      }
-
-      selectedFile = f;
-      fileInfo.textContent = f.name;
-      cleanBtn.disabled = false;
-      originalAudio.src = URL.createObjectURL(selectedFile);
-    }
-
-    dz.addEventListener('click', () => fileInput.click());
-    fileInput.addEventListener('change', e => handleFiles(e.target.files));
-
-    ['dragenter', 'dragover'].forEach(ev =>
-      dz.addEventListener(ev, e => {
-        e.preventDefault();
-        dz.classList.add('hover');
-        e.dataTransfer.dropEffect = 'copy';
-      })
-    );
-
-    ['dragleave', 'dragend', 'drop'].forEach(ev =>
-      dz.addEventListener(ev, () => dz.classList.remove('hover'))
-    );
-
-    dz.addEventListener('drop', e => {
-      e.preventDefault();
-      handleFiles(e.dataTransfer.files);
-    });
-
-    /* Предотвращение открытия файлов в браузере по умолчанию */
-    ['dragover', 'drop'].forEach(ev =>
-      document.addEventListener(ev, e => {
-        if (e.target !== dz) e.preventDefault();
-      })
-    );
-
-    /* ===== Моделирование процесса очистки ===== */
-    cleanBtn.addEventListener('click', () => {
-      if (!selectedFile) return;
-      
-      // Скрытие/отображение элементов UI
-      cleanBtn.disabled = true;
-      loadingSpinner.hidden = false;
-      progressWrap.hidden = false;
-      result.hidden = true;
-
-      // Моделирование прогресса
-      let prog = 0;
-      const progressInterval = setInterval(() => {
-        prog += 0.1;
-        if (prog > 1) {
-            prog = 1;
+    
+    setSelectedFile(file);
+    // Mock processing
+    setIsProcessing(true);
+    setProgress(0);
+    const interval = setInterval(() => {
+      setProgress(p => {
+        const newProgress = p + 0.05;
+        if (newProgress >= 1) {
+          clearInterval(interval);
+          setIsProcessing(false);
+          // Mock cleaned file
+          setProcessedFile(new Blob(['Mock cleaned audio data'], { type: 'audio/wav' }));
+          return 1;
         }
-        progressBar.style.width = Math.round(prog * 100) + '%';
-        if (prog === 1) {
-          clearInterval(progressInterval);
-          finish();
-        }
-      }, 300);
-    });
+        return newProgress;
+      });
+    }, 100);
+  };
 
-    // Функция, вызываемая по завершении обработки
-    function finish() {
-      loadingSpinner.hidden = true;
-      progressWrap.hidden = true;
-      result.hidden = false;
-      downloadBtn.disabled = false;
-      
-      // Имитация создания "очищенного" файла
-      cleanedFileBlob = new Blob(['Mock cleaned audio data'], { type: 'audio/wav' });
-      cleanedAudio.src = URL.createObjectURL(cleanedFileBlob);
+  const onDrop = (e) => {
+    e.preventDefault();
+    e.currentTarget.classList.remove('bg-gray-100');
+    const file = e.dataTransfer.files[0];
+    handleFile(file);
+  };
+
+  const onDragOver = (e) => {
+    e.preventDefault();
+    e.currentTarget.classList.add('bg-gray-100');
+  };
+
+  const onDragLeave = (e) => {
+    e.currentTarget.classList.remove('bg-gray-100');
+  };
+
+  const handleSelectFile = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
     }
+  };
 
-    /* ===== Обработка кнопок результата ===== */
-    downloadBtn.addEventListener('click', () => {
-      if (!cleanedFileBlob) return;
-      const ext = selectedFile.name.split('.').pop();
-      const base = selectedFile.name.replace(/\.[^/.]+$/, '');
+  const handleProcess = () => {
+    if (selectedFile) {
+      handleFile(selectedFile);
+    }
+  };
+
+  const handleDownload = () => {
+    if (processedFile) {
+      const url = URL.createObjectURL(processedFile);
       const a = document.createElement('a');
-      a.href = URL.createObjectURL(cleanedFileBlob);
-      a.download = `${base}.cleaned.${ext}`;
+      a.href = url;
+      a.download = `cleaned-audio.${selectedFile.name.split('.').pop()}`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
-      URL.revokeObjectURL(a.href);
-    });
+      URL.revokeObjectURL(url);
+    }
+  };
 
-    newBtn.addEventListener('click', () => {
-      // Сброс состояния приложения
-      selectedFile = null;
-      cleanedFileBlob = null;
-      fileInfo.textContent = '';
-      cleanBtn.disabled = true;
-      result.hidden = true;
-      progressWrap.hidden = true;
-      progressBar.style.width = '0%';
-      clearMessage();
-      originalAudio.removeAttribute('src');
-      cleanedAudio.removeAttribute('src');
-    });
+  const handleReset = () => {
+    setSelectedFile(null);
+    setProcessedFile(null);
+    setProgress(0);
+    setIsProcessing(false);
+  };
+  
+  const minutesLeft = dailyLimit - dailyMinutesUsed;
 
-    /* ===== Инициализация ===== */
-    window.onload = setTexts;
-  </script>
-</body>
-</html>
+  return (
+    <div className="bg-white text-gray-800">
+      {/* Header */}
+      <header className="bg-white shadow-md py-4 px-8 flex justify-between items-center">
+        <div className="flex items-center">
+          <img src="https://placehold.co/40x40/6c63ff/ffffff?text=NG" alt="NoiseGone Logo" className="h-10 w-10 mr-2" />
+          <span className="font-bold text-2xl text-gray-900">NoiseGone</span>
+        </div>
+        <nav className="hidden md:flex items-center space-x-6">
+          <a href="#features" className="text-gray-600 hover:text-gray-900 transition-colors duration-200">Features</a>
+          <a href="#pricing" className="text-gray-600 hover:text-gray-900 transition-colors duration-200">Pricing</a>
+          <a href="#faq" className="text-gray-600 hover:text-gray-900 transition-colors duration-200">FAQ</a>
+          <div className="flex items-center space-x-2">
+            <span className="text-gray-600">{t('language')}:</span>
+            <button onClick={() => setLang('ru')} className={`font-semibold ${lang === 'ru' ? 'text-gray-900' : 'text-gray-400'}`}>RU</button>
+            <button onClick={() => setLang('en')} className={`font-semibold ${lang === 'en' ? 'text-gray-900' : 'text-gray-400'}`}>EN</button>
+            <button onClick={() => setLang('de')} className={`font-semibold ${lang === 'de' ? 'text-gray-900' : 'text-gray-400'}`}>DE</button>
+          </div>
+          <a href="#" className="py-2 px-4 rounded-full bg-gray-200 text-gray-800 hover:bg-gray-300 transition-colors duration-200">Sign in</a>
+        </nav>
+        {/* Mobile menu button (not implemented) */}
+      </header>
+
+      <main className="container mx-auto px-4 py-16 text-center">
+        {/* Hero Section */}
+        <section className="py-12">
+          <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900 leading-tight mb-4">{t('heroTitle')}</h1>
+          <p className="text-lg md:text-xl text-gray-600 max-w-2xl mx-auto mb-8">{t('heroSubtitle')}</p>
+
+          {!selectedFile && (
+            <div 
+              onDrop={onDrop}
+              onDragOver={onDragOver}
+              onDragLeave={onDragLeave}
+              className="border-4 border-dashed border-gray-300 rounded-2xl p-12 mb-6 cursor-pointer hover:bg-gray-50 transition-colors duration-200"
+              onClick={handleSelectFile}
+            >
+              <input 
+                type="file" 
+                ref={fileInputRef} 
+                className="hidden" 
+                accept=".wav,.mp3,.m4a" 
+                onChange={(e) => handleFile(e.target.files[0])} 
+              />
+              <p className="text-lg text-gray-600 font-semibold">{t('dropMessage')}</p>
+              <p className="text-sm text-gray-400 mt-1">{t('dropFormats')}</p>
+            </div>
+          )}
+
+          {selectedFile && (
+            <div className="mt-4">
+              <p className="text-lg font-medium text-gray-800">{selectedFile.name}</p>
+              {!isProcessing && !processedFile && (
+                <button
+                  onClick={handleProcess}
+                  disabled={minutesLeft <= 0}
+                  className={`mt-4 py-3 px-8 rounded-full text-white font-bold transition-all duration-300 transform hover:scale-105 ${minutesLeft <= 0 ? 'bg-gray-400 cursor-not-allowed' : 'bg-indigo-600 hover:bg-indigo-700'}`}
+                >
+                  {t('btnProcess')}
+                </button>
+              )}
+              {minutesLeft <= 0 && <p className="text-red-500 mt-2">{t('limitExceeded')}</p>}
+            </div>
+          )}
+
+          {isProcessing && (
+            <div className="mt-8">
+              <p className="text-gray-600 mb-2">Обработка...</p>
+              <div className="w-full bg-gray-200 rounded-full h-2.5">
+                <div 
+                  className="bg-indigo-600 h-2.5 rounded-full transition-all duration-300" 
+                  style={{ width: `${progress * 100}%` }}
+                ></div>
+              </div>
+            </div>
+          )}
+        </section>
+
+        {/* Features Section */}
+        <section id="features" className="py-16">
+          <h2 className="text-3xl md:text-4xl font-extrabold text-gray-900 mb-12">{t('featuresTitle')}</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            <div className="bg-gray-50 p-6 rounded-2xl shadow-sm hover:shadow-lg transition-shadow duration-300">
+              <h3 className="text-xl font-bold mb-2">{t('feature1Title')}</h3>
+              <p className="text-gray-600">{t('feature1Desc')}</p>
+            </div>
+            <div className="bg-gray-50 p-6 rounded-2xl shadow-sm hover:shadow-lg transition-shadow duration-300">
+              <h3 className="text-xl font-bold mb-2">{t('feature2Title')}</h3>
+              <p className="text-gray-600">{t('feature2Desc')}</p>
+            </div>
+            <div className="bg-gray-50 p-6 rounded-2xl shadow-sm hover:shadow-lg transition-shadow duration-300">
+              <h3 className="text-xl font-bold mb-2">{t('feature3Title')}</h3>
+              <p className="text-gray-600">{t('feature3Desc')}</p>
+            </div>
+            <div className="bg-gray-50 p-6 rounded-2xl shadow-sm hover:shadow-lg transition-shadow duration-300">
+              <h3 className="text-xl font-bold mb-2">{t('feature4Title')}</h3>
+              <p className="text-gray-600">{t('feature4Desc')}</p>
+            </div>
+          </div>
+        </section>
+        
+        {/* How It Works Section */}
+        <section className="py-16">
+          <h2 className="text-3xl md:text-4xl font-extrabold text-gray-900 mb-12">{t('howItWorksTitle')}</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="flex flex-col items-center">
+              <div className="w-16 h-16 rounded-full bg-indigo-100 flex items-center justify-center mb-4">
+                <span className="text-3xl">1</span>
+              </div>
+              <h3 className="text-xl font-bold">{t('step1')}</h3>
+              <p className="text-gray-600 text-sm mt-1">{t('step1Desc')}</p>
+            </div>
+            <div className="flex flex-col items-center">
+              <div className="w-16 h-16 rounded-full bg-indigo-100 flex items-center justify-center mb-4">
+                <span className="text-3xl">2</span>
+              </div>
+              <h3 className="text-xl font-bold">{t('step2')}</h3>
+              <p className="text-gray-600 text-sm mt-1">{t('step2Desc')}</p>
+            </div>
+            <div className="flex flex-col items-center">
+              <div className="w-16 h-16 rounded-full bg-indigo-100 flex items-center justify-center mb-4">
+                <span className="text-3xl">3</span>
+              </div>
+              <h3 className="text-xl font-bold">{t('step3')}</h3>
+              <p className="text-gray-600 text-sm mt-1">{t('step3Desc')}</p>
+            </div>
+          </div>
+        </section>
+        
+        {/* Demo Section (A/B player) */}
+        {processedFile && (
+          <section className="py-16">
+            <h2 className="text-3xl md:text-4xl font-extrabold text-gray-900 mb-8">{t('demoTitle')}</h2>
+            <div className="flex flex-col md:flex-row justify-center items-center space-y-8 md:space-y-0 md:space-x-8">
+              <div className="bg-gray-50 p-6 rounded-2xl shadow-md w-full max-w-md">
+                <h3 className="font-bold text-lg mb-4">{t('original')}</h3>
+                <audio controls className="w-full">
+                  <source src={URL.createObjectURL(selectedFile)} type={selectedFile.type} />
+                  Your browser does not support the audio element.
+                </audio>
+              </div>
+              <div className="bg-gray-50 p-6 rounded-2xl shadow-md w-full max-w-md">
+                <h3 className="font-bold text-lg mb-4">{t('cleaned')}</h3>
+                <audio controls className="w-full">
+                  <source src={URL.createObjectURL(processedFile)} type={processedFile.type} />
+                  Your browser does not support the audio element.
+                </audio>
+              </div>
+            </div>
+            <div className="mt-8 flex flex-col sm:flex-row justify-center items-center space-y-4 sm:space-y-0 sm:space-x-4">
+              <button 
+                onClick={handleDownload}
+                className="py-3 px-8 rounded-full text-white font-bold bg-indigo-600 hover:bg-indigo-700 transition-colors duration-200 transform hover:scale-105"
+              >
+                {t('btnDownload')}
+              </button>
+              <button 
+                onClick={handleReset}
+                className="py-3 px-8 rounded-full text-gray-800 font-bold bg-gray-200 hover:bg-gray-300 transition-colors duration-200 transform hover:scale-105"
+              >
+                {t('btnReset')}
+              </button>
+            </div>
+          </section>
+        )}
+        
+        {/* Pricing Section */}
+        <section id="pricing" className="py-16">
+          <h2 className="text-3xl md:text-4xl font-extrabold text-gray-900 mb-12">{t('pricingTitle')}</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {/* Free Plan */}
+            <div className="bg-gray-50 p-8 rounded-2xl shadow-md flex flex-col items-center">
+              <h3 className="text-2xl font-bold mb-2">{t('pricingFree')}</h3>
+              <p className="text-4xl font-extrabold text-gray-900 mb-4">
+                <span className="text-lg font-normal">до</span> 5 <span className="text-lg font-normal">мин/день</span>
+              </p>
+              <ul className="text-gray-600 text-left w-full mb-6 list-disc list-inside">
+                <li>Обработка в браузере</li>
+                <li>Не требуется регистрация</li>
+                <li>Ограниченный лимит</li>
+              </ul>
+              <button className="w-full py-3 rounded-full text-white font-bold bg-indigo-600 opacity-50 cursor-not-allowed">
+                {t('pricingFree')}
+              </button>
+            </div>
+            {/* Pro Plan */}
+            <div className="bg-indigo-600 text-white p-8 rounded-2xl shadow-xl flex flex-col items-center transform scale-105">
+              <h3 className="text-2xl font-bold mb-2">{t('pricingPro')}</h3>
+              <p className="text-4xl font-extrabold mb-4">
+                <span className="text-lg font-normal">от</span> 60 <span className="text-lg font-normal">мин/мес</span>
+              </p>
+              <ul className="text-white text-left w-full mb-6 list-disc list-inside">
+                <li>Безлимитная обработка</li>
+                <li>Доступ к серверным моделям</li>
+                <li>Техническая поддержка</li>
+              </ul>
+              <button className="w-full py-3 rounded-full text-indigo-600 font-bold bg-white hover:bg-gray-200 transition-colors duration-200">
+                {t('pricingCTA')}
+              </button>
+            </div>
+            {/* Premium Plan */}
+            <div className="bg-gray-50 p-8 rounded-2xl shadow-md flex flex-col items-center">
+              <h3 className="text-2xl font-bold mb-2">{t('pricingPremium')}</h3>
+              <p className="text-4xl font-extrabold text-gray-900 mb-4">
+                <span className="text-lg font-normal">от</span> 300 <span className="text-lg font-normal">мин/мес</span>
+              </p>
+              <ul className="text-gray-600 text-left w-full mb-6 list-disc list-inside">
+                <li>Всё из Pro-плана</li>
+                <li>Приоритетная обработка</li>
+                <li>Пакетная обработка</li>
+              </ul>
+              <button className="w-full py-3 rounded-full text-white font-bold bg-indigo-600 hover:bg-indigo-700 transition-colors duration-200">
+                {t('pricingCTA')}
+              </button>
+            </div>
+          </div>
+        </section>
+
+        {/* FAQ Section */}
+        <section id="faq" className="py-16 text-left">
+          <h2 className="text-3xl md:text-4xl font-extrabold text-gray-900 text-center mb-12">{t('faqTitle')}</h2>
+          <div className="space-y-6">
+            <div>
+              <h3 className="font-bold text-lg">{t('faqQ1')}</h3>
+              <p className="text-gray-600 mt-2">{t('faqA1')}</p>
+            </div>
+            <div>
+              <h3 className="font-bold text-lg">{t('faqQ2')}</h3>
+              <p className="text-gray-600 mt-2">{t('faqA2')}</p>
+            </div>
+            <div>
+              <h3 className="font-bold text-lg">{t('faqQ3')}</h3>
+              <p className="text-gray-600 mt-2">{t('faqA3')}</p>
+            </div>
+            <div>
+              <h3 className="font-bold text-lg">{t('faqQ4')}</h3>
+              <p className="text-gray-600 mt-2">{t('faqA4')}</p>
+            </div>
+          </div>
+        </section>
+
+      </main>
+
+      {/* Footer */}
+      <footer className="bg-gray-900 text-gray-400 py-12 px-8 text-center">
+        <p className="mb-2 font-bold text-lg text-white">{t('footerSlogan')}</p>
+        <div className="flex justify-center space-x-4 mb-4">
+          <a href="#" className="hover:text-white">Privacy Policy</a>
+          <a href="#" className="hover:text-white">Terms of Service</a>
+          <a href="#" className="hover:text-white">Cookie Notice</a>
+        </div>
+        <p className="text-sm">{t('copyright')}</p>
+      </footer>
+    </div>
+  );
+};
+
+export default App;
+
