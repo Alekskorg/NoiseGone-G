@@ -131,6 +131,7 @@
       background-color: var(--progress-bg);
       border-radius: 12px;
       overflow: hidden;
+      margin-top: 16px;
     }
     #progressBar {
       height: 100%;
@@ -150,6 +151,35 @@
       font-weight: 600;
       text-align: center;
       color: var(--danger-color);
+    }
+    .audio-controls {
+      display: flex;
+      gap: 16px;
+      margin-top: 20px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .audio-player-container {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .spinner {
+      border: 4px solid rgba(0, 0, 0, 0.1);
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border-left-color: var(--primary-color);
+      animation: spin 1s ease infinite;
+      margin-top: 16px;
+    }
+    @keyframes spin {
+      0% {
+        transform: rotate(0deg);
+      }
+      100% {
+        transform: rotate(360deg);
+      }
     }
   </style>
 </head>
@@ -180,6 +210,9 @@
 
     <button id="cleanBtn" class="btn" disabled data-i18n="btnClean"></button>
 
+    <!-- loading spinner -->
+    <div id="loadingSpinner" class="spinner" hidden></div>
+
     <!-- progress -->
     <div id="progressWrap" class="progress" hidden>
       <div id="progressBar"></div>
@@ -188,6 +221,16 @@
     <!-- result -->
     <div id="result" hidden>
       <p data-i18n="done"></p>
+      <div class="audio-controls">
+        <div class="audio-player-container">
+          <p>Оригинальный файл</p>
+          <audio id="originalAudio" controls></audio>
+        </div>
+        <div class="audio-player-container">
+          <p>Очищенный файл</p>
+          <audio id="cleanedAudio" controls></audio>
+        </div>
+      </div>
       <button id="downloadBtn" class="btn" data-i18n="btnDownload"></button>
       <button id="newBtn" class="btn" data-i18n="btnNew"></button>
     </div>
@@ -232,9 +275,13 @@
     const downloadBtn = document.getElementById('downloadBtn');
     const newBtn = document.getElementById('newBtn');
     const messageBox = document.getElementById('messageBox');
+    const originalAudio = document.getElementById('originalAudio');
+    const cleanedAudio = document.getElementById('cleanedAudio');
+    const loadingSpinner = document.getElementById('loadingSpinner');
 
     /* ===== state ===== */
     let selectedFile = null;
+    let cleanedFileBlob = null;
 
     /* ===== helpers ===== */
     // Функция для перевода текста
@@ -275,6 +322,7 @@
       selectedFile = f;
       fileInfo.textContent = f.name;
       cleanBtn.disabled = false;
+      originalAudio.src = URL.createObjectURL(selectedFile);
     }
 
     dz.addEventListener('click', () => fileInput.click());
@@ -308,11 +356,14 @@
     cleanBtn.addEventListener('click', () => {
       if (!selectedFile) return;
       cleanBtn.disabled = true;
+      loadingSpinner.hidden = false;
       progressWrap.hidden = false;
       let prog = 0;
       const progressInterval = setInterval(() => {
         prog += 0.1;
-        if (prog > 1) prog = 1;
+        if (prog > 1) {
+            prog = 1;
+        }
         progressBar.style.width = Math.round(prog * 100) + '%';
         if (prog === 1) {
           clearInterval(progressInterval);
@@ -322,18 +373,22 @@
     });
 
     function finish() {
+      loadingSpinner.hidden = true;
       progressWrap.hidden = true;
       result.hidden = false;
       downloadBtn.disabled = false;
+      
+      // Имитация "очищенного" файла
+      cleanedFileBlob = new Blob(['Mock cleaned audio data'], { type: 'audio/wav' });
+      cleanedAudio.src = URL.createObjectURL(cleanedFileBlob);
     }
 
     downloadBtn.addEventListener('click', () => {
-      // Имитация скачивания файла
+      if (!cleanedFileBlob) return;
       const ext = selectedFile.name.split('.').pop();
       const base = selectedFile.name.replace(/\.[^/.]+$/, '');
       const a = document.createElement('a');
-      const blob = new Blob(['Mock cleaned audio data'], { type: 'audio/wav' });
-      a.href = URL.createObjectURL(blob);
+      a.href = URL.createObjectURL(cleanedFileBlob);
       a.download = `${base}.cleaned.${ext}`;
       document.body.appendChild(a);
       a.click();
@@ -343,12 +398,15 @@
 
     newBtn.addEventListener('click', () => {
       selectedFile = null;
+      cleanedFileBlob = null;
       fileInfo.textContent = '';
       cleanBtn.disabled = true;
       result.hidden = true;
       progressWrap.hidden = true;
       progressBar.style.width = '0%';
       clearMessage();
+      originalAudio.removeAttribute('src');
+      cleanedAudio.removeAttribute('src');
     });
 
     /* ===== init ===== */
