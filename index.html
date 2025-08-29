@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState } from 'react';
+import ReactDOM from 'react-dom/client';
 
 // Создаем объект с переводами
 const translations = {
@@ -84,7 +85,7 @@ const translations = {
     feature2Title: 'Sofortige Verarbeitung',
     feature2Desc: 'Erhalten Sie Ihre Ergebnisse in Sekundenschnelle.',
     feature3Title: 'Formatunterstützung',
-    feature3Desc: 'Funktioniert mit MP3, WAV, FLAC und anderen gängigen Formaten.',
+    feature3Desc: 'Funktioniert mit MP3, WAV, FLAC и другими gängigen Formaten.',
     howItWorksTitle: 'So funktioniert es',
     step1: 'Schritt 1: Audio hochladen',
     step1Desc: 'Wählen Sie eine Datei von Ihrem Computer oder ziehen Sie sie in den Upload-Bereich.',
@@ -367,5 +368,19 @@ const PricingCard = ({ titleKey }) => {
     </div>
   );
 };
+
+document.addEventListener('DOMContentLoaded', () => {
+  const container = document.getElementById('root');
+  if (container) {
+    const root = ReactDOM.createRoot(container);
+    root.render(
+      <React.StrictMode>
+        <App />
+      </React.StrictMode>
+    );
+  } else {
+    console.error('Failed to find the root element to mount the React application.');
+  }
+});
 
 export default App;
