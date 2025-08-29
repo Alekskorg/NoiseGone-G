@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import ReactDOM from 'react-dom/client';
 
 // Создаем объект с переводами
@@ -125,7 +125,7 @@ const LanguageProvider = ({ children }) => {
 // Хук для использования контекста в компонентах
 const useLanguage = () => useContext(LanguageContext);
 
-// Пример компонента для переключения языка
+// Компонент для переключения языка
 const LanguageSwitcher = () => {
   const { lang, setLang } = useLanguage();
   const languages = ['ru', 'en', 'de'];
@@ -156,7 +156,7 @@ const App = () => {
           
           <LanguageSwitcher />
 
-          {/* Hero Section */}
+          {/* Секция "Герой" */}
           <section className="text-center space-y-4">
             <h1 className="text-5xl font-bold text-gray-900 leading-tight">
               <TranslateText textKey="heroTitle" />
@@ -169,7 +169,7 @@ const App = () => {
             </div>
           </section>
 
-          {/* Features Section */}
+          {/* Секция "Возможности" */}
           <section className="space-y-6">
             <h2 className="text-3xl font-bold text-center text-gray-900">
               <TranslateText textKey="featuresTitle" />
@@ -190,7 +190,7 @@ const App = () => {
             </div>
           </section>
 
-          {/* How It Works Section */}
+          {/* Секция "Как это работает" */}
           <section className="space-y-6">
             <h2 className="text-3xl font-bold text-center text-gray-900">
               <TranslateText textKey="howItWorksTitle" />
@@ -214,7 +214,7 @@ const App = () => {
             </div>
           </section>
 
-          {/* Pricing Section - Simplified for this example */}
+          {/* Секция "Тарифные планы" */}
           <section className="space-y-6">
             <h2 className="text-3xl font-bold text-center text-gray-900">
               <TranslateText textKey="pricingTitle" />
@@ -226,7 +226,7 @@ const App = () => {
             </div>
           </section>
 
-          {/* Footer Section - Simplified for this example */}
+          {/* Секция "Подвал" */}
           <footer className="text-center text-sm text-gray-500 space-y-2">
             <div>
               <a href="#" className="hover:underline mx-2"><TranslateText textKey="privacyPolicy" /></a>
@@ -369,6 +369,7 @@ const PricingCard = ({ titleKey }) => {
   );
 };
 
+// Ждем полной загрузки DOM перед монтированием приложения
 document.addEventListener('DOMContentLoaded', () => {
   const container = document.getElementById('root');
   if (container) {
@@ -379,7 +380,7 @@ document.addEventListener('DOMContentLoaded', () => {
       </React.StrictMode>
     );
   } else {
-    console.error('Failed to find the root element to mount the React application.');
+    console.error('Не удалось найти корневой элемент для монтирования React-приложения.');
   }
 });
 
