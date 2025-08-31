@@ -3,427 +3,755 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NoiseGone</title>
+    <title>NoiseGone — Удаляйте шум из аудио за секунды</title>
+    
+    <!-- SEO & OpenGraph Meta Tags -->
+    <meta name="description" content="NoiseGone — шум ушёл. Быстрое шумоподавление прямо в браузере. Загрузите аудио и получите чистый звук за несколько секунд. Бесплатная обработка до 5 минут в день.">
+    <meta name="keywords" content="удалить шум, шумоподавление, очистка аудио, убрать фон, remove background noise, audio enhancer">
+    <meta property="og:title" content="NoiseGone — Удаляйте шум из аудио за секунды">
+    <meta property="og:description" content="NoiseGone — шум ушёл. Быстрое шумоподавление прямо в браузере.">
+    <meta property="og:image" content="https://placehold.co/1200x630/7c3aed/ffffff?text=NoiseGone">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://noisegone.example.com">
+    <meta name="twitter:card" content="summary_large_image">
+
+    <!-- Favicon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎙️</text></svg>">
+
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        /* Custom styles */
         body {
             font-family: 'Inter', sans-serif;
+            scroll-behavior: smooth;
+        }
+        .hero-gradient {
+            background: radial-gradient(circle, rgba(243,244,246,1) 0%, rgba(255,255,255,0) 70%);
+        }
+        .ab-compare-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 40px;
+            height: 40px;
+            background: white;
+            border: 2px solid #8B5CF6;
+            border-radius: 50%;
+            cursor: ew-resize;
+            box-shadow: 0 0 10px rgba(0,0,0,0.2);
+        }
+        .ab-compare-slider::-moz-range-thumb {
+            width: 40px;
+            height: 40px;
+            background: white;
+            border: 2px solid #8B5CF6;
+            border-radius: 50%;
+            cursor: ew-resize;
+            box-shadow: 0 0 10px rgba(0,0,0,0.2);
+        }
+        .dropzone-active {
+            border-color: #8B5CF6;
+            background-color: #f5f3ff;
         }
     </style>
 </head>
-<body class="bg-gray-100 antialiased p-8">
-    <div id="root"></div>
+<body class="bg-white text-gray-800 antialiased">
 
-    <script type="text/babel">
-        const { createContext, useContext, useState, useEffect } = React;
-        const { createRoot } = ReactDOM;
+    <!-- App Container -->
+    <div id="app" class="overflow-x-hidden">
 
-        // Создаем объект с переводами
-        const translations = {
-            ru: {
-                logoText: 'NoiseGone',
-                heroTitle: 'Удаление шума из аудио',
-                heroSubtitle: 'Используйте наш сервис, чтобы легко очистить ваши аудиофайлы',
-                selectFile: 'Выберите файл',
-                fileSelected: 'Файл выбран',
-                dropMessage: 'или перетащите файл сюда',
-                processing: 'Обработка...',
-                featuresTitle: 'Наши возможности',
-                feature1Title: 'Высокая точность',
-                feature1Desc: 'Наши алгоритмы обеспечивают превосходное качество очистки.',
-                feature2Title: 'Мгновенная обработка',
-                feature2Desc: 'Получите результат за считанные секунды.',
-                feature3Title: 'Поддержка форматов',
-                feature3Desc: 'Работает с MP3, WAV, FLAC и другими популярными форматами.',
-                howItWorksTitle: 'Как это работает',
-                step1: 'Шаг 1: Загрузите аудио',
-                step1Desc: 'Выберите файл с вашего компьютера или перетащите его в область загрузки.',
-                step2: 'Шаг 2: Обработка',
-                step2Desc: 'Наши серверы обработают файл, удалив все шумы.',
-                step3: 'Шаг 3: Скачайте результат',
-                step3Desc: 'Получите чистый аудиофайл без посторонних шумов.',
-                pricingTitle: 'Тарифные планы',
-                freePlan: 'Бесплатный план',
-                proPlan: 'Pro-план',
-                premiumPlan: 'Премиум-план',
-                privacyPolicy: 'Политика конфиденциальности',
-                termsOfService: 'Условия использования',
-                cookieNotice: 'Уведомление о файлах cookie',
-                copyright: '© 2024 NoiseGone. Все права защищены.',
-                download: 'Скачать',
-                reset: 'Сбросить',
-                errorMessage: 'Ошибка: не удалось обработать файл.',
-                start: 'Начать',
-            },
-            en: {
-                logoText: 'NoiseGone',
-                heroTitle: 'Audio Noise Removal',
-                heroSubtitle: 'Use our service to easily clean up your audio files',
-                selectFile: 'Select a file',
-                fileSelected: 'File selected',
-                dropMessage: 'or drag and drop here',
-                processing: 'Processing...',
-                featuresTitle: 'Our Features',
-                feature1Title: 'High Accuracy',
-                feature1Desc: 'Our algorithms ensure superior cleaning quality.',
-                feature2Title: 'Instant Processing',
-                feature2Desc: 'Get your results in a matter of seconds.',
-                feature3Title: 'Format Support',
-                feature3Desc: 'Works with MP3, WAV, FLAC and other popular formats.',
-                howItWorksTitle: 'How It Works',
-                step1: 'Step 1: Upload Audio',
-                step1Desc: 'Select a file from your computer or drag and drop it into the upload area.',
-                step2: 'Step 2: Processing',
-                step2Desc: 'Our servers will process the file, removing all noise.',
-                step3: 'Step 3: Download Result',
-                step3Desc: 'Get a clean audio file without background noise.',
-                pricingTitle: 'Pricing Plans',
-                freePlan: 'Free Plan',
-                proPlan: 'Pro Plan',
-                premiumPlan: 'Premium Plan',
-                privacyPolicy: 'Privacy Policy',
-                termsOfService: 'Terms of Service',
-                cookieNotice: 'Cookie Notice',
-                copyright: '© 2024 NoiseGone. All Rights Reserved.',
-                download: 'Download',
-                reset: 'Reset',
-                errorMessage: 'Error: Failed to process file.',
-                start: 'Start',
-            },
-            de: {
-                logoText: 'NoiseGone',
-                heroTitle: 'Audio-Rauschunterdrückung',
-                heroSubtitle: 'Nutzen Sie unseren Service, um Ihre Audiodateien einfach zu bereinigen',
-                selectFile: 'Datei auswählen',
-                fileSelected: 'Datei ausgewählt',
-                dropMessage: 'oder per Drag & Drop hier ablegen',
-                processing: 'Verarbeitung...',
-                featuresTitle: 'Unsere Funktionen',
-                feature1Title: 'Hohe Genauigkeit',
-                feature1Desc: 'Unsere Algorithmen gewährleisten eine hervorragende Reinigungsqualität.',
-                feature2Title: 'Sofortige Verarbeitung',
-                feature2Desc: 'Erhalten Sie Ihre Ergebnisse in Sekundenschnelle.',
-                feature3Title: 'Formatunterstützung',
-                feature3Desc: 'Funktioniert mit MP3, WAV, FLAC и другими gängigen Formaten.',
-                howItWorksTitle: 'So funktioniert es',
-                step1: 'Schritt 1: Audio hochladen',
-                step1Desc: 'Wählen Sie eine Datei von Ihrem Computer oder ziehen Sie sie in den Upload-Bereich.',
-                step2: 'Schritt 2: Verarbeitung',
-                step2Desc: 'Unsere Server verarbeiten die Datei und entfernen alle Geräusche.',
-                step3: 'Schritt 3: Ergebnis herunterladen',
-                step3Desc: 'Erhalten Sie eine saubere Audiodatei ohne Hintergrundgeräusche.',
-                pricingTitle: 'Preispläne',
-                freePlan: 'Kostenloser Plan',
-                proPlan: 'Pro-Plan',
-                premiumPlan: 'Premium-Plan',
-                privacyPolicy: 'Datenschutzrichtlinie',
-                termsOfService: 'Nutzungsbedingungen',
-                cookieNotice: 'Cookie-Hinweis',
-                copyright: '© 2024 NoiseGone. Alle Rechte vorbehalten.',
-                download: 'Herunterladen',
-                reset: 'Zurücksetzen',
-                errorMessage: 'Fehler: Datei konnte nicht verarbeitet werden.',
-                start: 'Starten',
-            },
-        };
+        <!-- Header -->
+        <header class="sticky top-0 z-50 bg-white/80 backdrop-blur-lg border-b border-gray-200">
+            <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
+                <a href="#" class="flex items-center space-x-2">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="text-violet-600">
+                        <rect x="4" y="8" width="2" height="8" rx="1" fill="currentColor"/>
+                        <rect x="9" y="4" width="2" height="16" rx="1" fill="currentColor"/>
+                        <rect x="14" y="10" width="2" height="4" rx="1" fill="currentColor"/>
+                        <rect x="19" y="7" width="2" height="10" rx="1" fill="currentColor"/>
+                    </svg>
+                    <span class="font-bold text-xl text-gray-900">NoiseGone</span>
+                </a>
 
-        // Создаем контекст для доступа к переводам и языку
-        const LanguageContext = createContext();
-
-        // Компонент-провайдер для контекста языка
-        const LanguageProvider = ({ children }) => {
-            const [lang, setLang] = useState('ru'); // Устанавливаем язык по умолчанию
-            const t = (key) => translations[lang][key] || key; // Функция перевода
-
-            return (
-                <LanguageContext.Provider value={{ lang, setLang, t }}>
-                    {children}
-                </LanguageContext.Provider>
-            );
-        };
-
-        // Хук для использования контекста в компонентах
-        const useLanguage = () => useContext(LanguageContext);
-
-        // Компонент для переключения языка
-        const LanguageSwitcher = () => {
-            const { lang, setLang } = useLanguage();
-            const languages = ['ru', 'en', 'de'];
-
-            return (
-                <div className="flex justify-center space-x-4 p-4">
-                    {languages.map(language => (
-                        <button 
-                            key={language}
-                            className={`px-4 py-2 rounded-full font-semibold transition-transform duration-300 transform hover:scale-105 ${
-                                lang === language ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                            }`}
-                            onClick={() => setLang(language)}
-                        >
-                            {language.toUpperCase()}
-                        </button>
-                    ))}
+                <div class="hidden lg:flex items-center space-x-8">
+                    <a href="#features" class="text-gray-600 hover:text-violet-600 transition-colors" data-translate="nav_features">Преимущества</a>
+                    <a href="#pricing" class="text-gray-600 hover:text-violet-600 transition-colors" data-translate="nav_pricing">Тарифы</a>
+                    <a href="#faq" class="text-gray-600 hover:text-violet-600 transition-colors" data-translate="nav_faq">FAQ</a>
                 </div>
-            );
-        };
 
-        // Вспомогательный компонент для перевода текста по ключу
-        const TranslateText = ({ textKey }) => {
-            const { t } = useLanguage();
-            return <>{t(textKey)}</>;
-        };
-
-        // Вспомогательные компоненты для демонстрации структуры
-        const FileUploadSection = () => {
-            const { t } = useLanguage();
-            const [selectedFile, setSelectedFile] = useState(null);
-            const [isProcessing, setIsProcessing] = useState(false);
-            const [message, setMessage] = useState('');
-
-            const handleFileChange = (e) => {
-                const file = e.target.files[0];
-                if (file) {
-                    setSelectedFile(file);
-                    setMessage('');
-                }
-            };
-
-            const handleProcess = () => {
-                if (selectedFile) {
-                    setIsProcessing(true);
-                    setMessage(t('processing'));
-                    // Имитация обработки
-                    setTimeout(() => {
-                        setIsProcessing(false);
-                        setMessage('');
-                        // Имитация успешной обработки
-                        // Можно добавить логику для отображения обработанного файла
-                    }, 3000);
-                } else {
-                    setMessage(t('errorMessage'));
-                }
-            };
-
-            const handleDragOver = (e) => {
-                e.preventDefault();
-            };
-
-            const handleDrop = (e) => {
-                e.preventDefault();
-                const file = e.dataTransfer.files[0];
-                if (file) {
-                    setSelectedFile(file);
-                    setMessage('');
-                }
-            };
-
-            return (
-                <div className="flex flex-col items-center space-y-4">
-                    <div 
-                        className="w-full max-w-lg bg-gray-50 border-2 border-dashed border-gray-300 rounded-xl p-8 text-center space-y-4 transition-colors duration-300 hover:border-indigo-500"
-                        onDragOver={handleDragOver}
-                        onDrop={handleDrop}
-                    >
-                        <div className="flex items-center justify-center">
-                            <input 
-                                type="file" 
-                                id="file-upload" 
-                                onChange={handleFileChange} 
-                                className="hidden"
-                            />
-                            <label htmlFor="file-upload" className="bg-indigo-600 text-white font-semibold py-3 px-6 rounded-full cursor-pointer hover:bg-indigo-700 transition">
-                                {t('selectFile')}
-                            </label>
+                <div class="flex items-center space-x-4">
+                     <!-- Language Switcher -->
+                    <div class="relative">
+                        <select id="language-switcher" class="appearance-none bg-gray-100 border border-gray-200 rounded-md py-2 pl-3 pr-8 text-sm font-medium text-gray-700 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-violet-500 cursor-pointer">
+                            <option value="ru">RU</option>
+                            <option value="en">EN</option>
+                            <option value="de">DE</option>
+                        </select>
+                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                           <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
                         </div>
-                        <p className="text-gray-500">
-                            {t('dropMessage')}
-                        </p>
                     </div>
-                    {selectedFile && (
-                        <div className="text-sm text-gray-600">
-                            <p>{t('fileSelected')}: {selectedFile.name}</p>
-                        </div>
-                    )}
-                    {message && (
-                        <div className="text-sm text-center font-medium text-gray-600">
-                            {message}
-                        </div>
-                    )}
-                    <button 
-                        onClick={handleProcess}
-                        disabled={!selectedFile || isProcessing}
-                        className="bg-green-500 text-white font-semibold py-3 px-8 rounded-full shadow-lg hover:bg-green-600 transition-colors duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                        {isProcessing ? t('processing') : t('start')}
+                    <button class="px-4 py-2 text-sm font-semibold text-white bg-violet-600 rounded-lg hover:bg-violet-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-violet-500 transition-all" data-translate="nav_signin">
+                        Войти
                     </button>
                 </div>
-            );
-        };
+            </nav>
+        </header>
 
-        const FeatureCard = ({ titleKey, descKey }) => {
-            const { t } = useLanguage();
-            return (
-                <div className="p-6 bg-gray-50 rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300">
-                    <h3 className="text-xl font-bold mb-2 text-indigo-600">
-                        {t(titleKey)}
-                    </h3>
-                    <p className="text-gray-600">
-                        {t(descKey)}
+        <!-- Main Content -->
+        <main>
+
+            <!-- Hero Section -->
+            <section id="hero" class="relative py-20 md:py-32 text-center">
+                <div class="absolute inset-0 -z-10 hero-gradient"></div>
+                <div class="container mx-auto px-6">
+                    <h1 class="text-4xl md:text-6xl font-extrabold text-gray-900 mb-4 leading-tight" data-translate="hero_title">Удаляйте шум из аудио за секунды</h1>
+                    <p class="text-lg md:text-xl text-gray-600 max-w-3xl mx-auto mb-10" data-translate="hero_subtitle">
+                        Наш ИИ-алгоритм обрабатывает звук прямо в вашем браузере. Быстро, безопасно и бесплатно до 5 минут в день.
                     </p>
-                </div>
-            );
-        };
-
-        const StepCard = ({ stepNumber, titleKey, descKey }) => {
-            const { t } = useLanguage();
-            return (
-                <div className="flex flex-col items-center text-center p-6 bg-white rounded-lg shadow-md">
-                    <div className="w-12 h-12 flex items-center justify-center bg-indigo-500 text-white rounded-full text-2xl font-bold mb-4">
-                        {stepNumber}
-                    </div>
-                    <h3 className="text-xl font-semibold mb-2 text-gray-900">
-                        {t(titleKey)}
-                    </h3>
-                    <p className="text-gray-600">
-                        {t(descKey)}
-                    </p>
-                </div>
-            );
-        };
-
-        const PricingCard = ({ titleKey }) => {
-            const { t } = useLanguage();
-            return (
-                <div className="p-6 bg-white rounded-lg shadow-xl border-2 border-transparent hover:border-indigo-500 transition-colors duration-300">
-                    <h3 className="text-2xl font-bold text-center text-gray-900 mb-4">
-                        {t(titleKey)}
-                    </h3>
-                    <ul className="list-disc list-inside text-gray-600 space-y-2">
-                        <li>Свободное место</li>
-                        <li>Поддержка</li>
-                        <li>Без рекламы</li>
-                    </ul>
-                    <div className="text-center mt-6">
-                        <button className="bg-indigo-600 text-white font-bold py-3 px-8 rounded-full shadow-lg hover:bg-indigo-700 transition-colors duration-300">
-                            Выбрать
-                        </button>
-                    </div>
-                </div>
-            );
-        };
-
-        // Главный компонент приложения
-        const App = () => {
-            return (
-                <LanguageProvider>
-                    <div className="min-h-screen bg-gray-100 font-sans text-gray-800 antialiased p-8">
-                        <div className="max-w-4xl mx-auto bg-white rounded-2xl shadow-xl overflow-hidden p-8 space-y-12">
-                            
-                            <LanguageSwitcher />
-
-                            {/* Секция "Герой" */}
-                            <section className="text-center space-y-4">
-                                <h1 className="text-5xl font-bold text-gray-900 leading-tight">
-                                    <TranslateText textKey="heroTitle" />
-                                </h1>
-                                <p className="text-xl text-gray-600">
-                                    <TranslateText textKey="heroSubtitle" />
-                                </p>
-                                <div className="mt-8">
-                                    <FileUploadSection />
-                                </div>
-                            </section>
-
-                            {/* Секция "Возможности" */}
-                            <section className="space-y-6">
-                                <h2 className="text-3xl font-bold text-center text-gray-900">
-                                    <TranslateText textKey="featuresTitle" />
-                                </h2>
-                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 text-center">
-                                    <FeatureCard 
-                                        titleKey="feature1Title"
-                                        descKey="feature1Desc"
-                                    />
-                                    <FeatureCard 
-                                        titleKey="feature2Title"
-                                        descKey="feature2Desc"
-                                    />
-                                    <FeatureCard 
-                                        titleKey="feature3Title"
-                                        descKey="feature3Desc"
-                                    />
-                                </div>
-                            </section>
-
-                            {/* Секция "Как это работает" */}
-                            <section className="space-y-6">
-                                <h2 className="text-3xl font-bold text-center text-gray-900">
-                                    <TranslateText textKey="howItWorksTitle" />
-                                </h2>
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                                    <StepCard
-                                        stepNumber="1"
-                                        titleKey="step1"
-                                        descKey="step1Desc"
-                                    />
-                                    <StepCard
-                                        stepNumber="2"
-                                        titleKey="step2"
-                                        descKey="step2Desc"
-                                    />
-                                    <StepCard
-                                        stepNumber="3"
-                                        titleKey="step3"
-                                        descKey="step3Desc"
-                                    />
-                                </div>
-                            </section>
-
-                            {/* Секция "Тарифные планы" */}
-                            <section className="space-y-6">
-                                <h2 className="text-3xl font-bold text-center text-gray-900">
-                                    <TranslateText textKey="pricingTitle" />
-                                </h2>
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                                    <PricingCard titleKey="freePlan" />
-                                    <PricingCard titleKey="proPlan" />
-                                    <PricingCard titleKey="premiumPlan" />
-                                </div>
-                            </section>
-
-                            {/* Секция "Подвал" */}
-                            <footer className="text-center text-sm text-gray-500 space-y-2">
-                                <div>
-                                    <a href="#" className="hover:underline mx-2"><TranslateText textKey="privacyPolicy" /></a>
-                                    <a href="#" className="hover:underline mx-2"><TranslateText textKey="termsOfService" /></a>
-                                    <a href="#" className="hover:underline mx-2"><TranslateText textKey="cookieNotice" /></a>
-                                </div>
-                                <p><TranslateText textKey="copyright" /></p>
-                            </footer>
+                    
+                    <!-- Drop Zone -->
+                    <div id="dropzone" class="max-w-2xl mx-auto border-2 border-dashed border-gray-300 rounded-2xl p-8 md:p-12 transition-all cursor-pointer hover:border-violet-400 bg-gray-50/50">
+                        <div class="flex flex-col items-center justify-center space-y-4">
+                            <svg class="w-16 h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M12 15l-3-3m0 0l3-3m-3 3h12"></path></svg>
+                            <p class="text-gray-600 font-medium" data-translate="hero_dropzone_text">Перетащите аудиофайл сюда</p>
+                            <p class="text-gray-500 text-sm" data-translate="hero_dropzone_or">или</p>
+                            <button id="upload-button" class="px-8 py-3 font-semibold text-white bg-violet-600 rounded-lg hover:bg-violet-700 transition-all shadow-sm">
+                                <span data-translate="hero_dropzone_button">Выбрать файл</span>
+                            </button>
+                            <input type="file" id="file-input" class="hidden" accept="audio/*">
                         </div>
                     </div>
-                </LanguageProvider>
-            );
+                    <p class="text-xs text-gray-500 mt-4" data-translate="hero_dropzone_formats">Поддерживаемые форматы: MP3, WAV, FLAC, M4A. Макс. размер: 100MB.</p>
+                </div>
+            </section>
+            
+            <!-- Upload Progress & Result Section -->
+            <section id="result-section" class="hidden py-10 md:py-16 bg-gray-50">
+                <div class="container mx-auto px-6 max-w-3xl text-center">
+                    <div id="upload-progress-container" class="w-full bg-gray-200 rounded-full h-4 mb-4 overflow-hidden">
+                        <div id="upload-progress-bar" class="bg-violet-600 h-4 rounded-full transition-all duration-500" style="width: 0%"></div>
+                    </div>
+                    <p id="upload-status" class="font-medium text-lg text-gray-700 mb-8" data-translate-status="processing">Обработка...</p>
+                    
+                    <!-- A/B Compare Player -->
+                    <div id="player-container" class="hidden">
+                        <h2 class="text-3xl font-bold text-gray-900 mb-6" data-translate="player_title">Результат готов!</h2>
+                        <div class="relative w-full max-w-2xl mx-auto bg-white p-6 rounded-2xl shadow-lg">
+                            <div class="relative h-24 bg-gray-200 rounded-lg overflow-hidden">
+                                <!-- Original Audio Visualizer -->
+                                <div id="waveform-before" class="absolute inset-0 bg-repeat-x bg-center" style="background-image: url('https://placehold.co/800x96/e9d5ff/7c3aed?text=Original+Waveform');"></div>
+                                <!-- Cleaned Audio Visualizer -->
+                                <div id="waveform-after-container" class="absolute inset-0 overflow-hidden">
+                                    <div id="waveform-after" class="absolute inset-0 bg-repeat-x bg-center" style="background-image: url('https://placehold.co/800x96/c4b5fd/4f46e5?text=Cleaned+Waveform');"></div>
+                                </div>
+                            </div>
+                            <input type="range" min="0" max="100" value="50" class="ab-compare-slider absolute inset-0 w-full h-full m-0 p-0 opacity-0 cursor-ew-resize z-10" id="ab-slider">
+                            <div class="flex justify-between mt-4 text-sm font-medium text-gray-500">
+                                <span data-translate="player_before">До</span>
+                                <span data-translate="player_after">После</span>
+                            </div>
+                        </div>
+                        <div class="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
+                            <button class="w-full sm:w-auto px-8 py-3 font-semibold text-white bg-violet-600 rounded-lg hover:bg-violet-700 transition-all" data-translate="player_download">Скачать результат</button>
+                            <button id="process-another" class="w-full sm:w-auto px-8 py-3 font-semibold text-violet-700 bg-violet-100 rounded-lg hover:bg-violet-200 transition-all" data-translate="player_another">Обработать другой файл</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+
+            <!-- Features Section -->
+            <section id="features" class="py-20 bg-white">
+                <div class="container mx-auto px-6">
+                    <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+                        <!-- Feature 1 -->
+                        <div class="text-center p-6 bg-gray-50 rounded-2xl">
+                            <div class="flex items-center justify-center h-12 w-12 rounded-full bg-violet-100 text-violet-600 mx-auto mb-4">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                            </div>
+                            <h3 class="text-xl font-bold mb-2" data-translate="feature1_title">Безопасность</h3>
+                            <p class="text-gray-600" data-translate="feature1_desc">По умолчанию обработка на устройстве — ваш файл не уходит в облако.</p>
+                        </div>
+                        <!-- Feature 2 -->
+                        <div class="text-center p-6 bg-gray-50 rounded-2xl">
+                             <div class="flex items-center justify-center h-12 w-12 rounded-full bg-violet-100 text-violet-600 mx-auto mb-4">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                            </div>
+                            <h3 class="text-xl font-bold mb-2" data-translate="feature2_title">Скорость</h3>
+                            <p class="text-gray-600" data-translate="feature2_desc">Результат за секунды/минуты без очереди и долгих ожиданий.</p>
+                        </div>
+                        <!-- Feature 3 -->
+                        <div class="text-center p-6 bg-gray-50 rounded-2xl">
+                             <div class="flex items-center justify-center h-12 w-12 rounded-full bg-violet-100 text-violet-600 mx-auto mb-4">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+                            </div>
+                            <h3 class="text-xl font-bold mb-2" data-translate="feature3_title">Честный лимит</h3>
+                            <p class="text-gray-600" data-translate="feature3_desc">5 мин/день бесплатно — достаточно, чтобы понять качество нашего сервиса.</p>
+                        </div>
+                        <!-- Feature 4 -->
+                        <div class="text-center p-6 bg-gray-50 rounded-2xl">
+                            <div class="flex items-center justify-center h-12 w-12 rounded-full bg-violet-100 text-violet-600 mx-auto mb-4">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                            </div>
+                            <h3 class="text-xl font-bold mb-2" data-translate="feature4_title">Простота</h3>
+                            <p class="text-gray-600" data-translate="feature4_desc">Открыл — бросил файл — скачал. Никакой регистрации на старте.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- How it works Section -->
+            <section id="how-it-works" class="py-20 bg-gray-50">
+                <div class="container mx-auto px-6 text-center">
+                    <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4" data-translate="howitworks_title">Как это работает?</h2>
+                    <p class="text-lg text-gray-600 max-w-2xl mx-auto mb-12" data-translate="howitworks_subtitle">Всего три простых шага к чистому звуку.</p>
+                    <div class="grid md:grid-cols-3 gap-8 md:gap-16 relative">
+                         <!-- Dashed lines -->
+                        <div class="hidden md:block absolute top-1/2 left-0 w-full h-px -translate-y-10">
+                            <svg width="100%" height="2">
+                                <line x1="0" y1="1" x2="100%" y2="1" stroke-width="2" stroke-dasharray="8 8" class="stroke-gray-300"/>
+                            </svg>
+                        </div>
+                        <!-- Step 1 -->
+                        <div class="relative z-10">
+                            <div class="flex items-center justify-center h-20 w-20 rounded-full bg-violet-600 text-white mx-auto mb-4 shadow-lg">
+                                <span class="text-2xl font-bold">1</span>
+                            </div>
+                            <h3 class="text-xl font-bold mb-2" data-translate="step1_title">Загрузите</h3>
+                            <p class="text-gray-600" data-translate="step1_desc">Перетащите или выберите файл с вашего устройства.</p>
+                        </div>
+                        <!-- Step 2 -->
+                        <div class="relative z-10">
+                            <div class="flex items-center justify-center h-20 w-20 rounded-full bg-violet-600 text-white mx-auto mb-4 shadow-lg">
+                                <span class="text-2xl font-bold">2</span>
+                            </div>
+                            <h3 class="text-xl font-bold mb-2" data-translate="step2_title">Обработка</h3>
+                            <p class="text-gray-600" data-translate="step2_desc">Наш ИИ анализирует и удаляет фоновый шум.</p>
+                        </div>
+                        <!-- Step 3 -->
+                        <div class="relative z-10">
+                            <div class="flex items-center justify-center h-20 w-20 rounded-full bg-violet-600 text-white mx-auto mb-4 shadow-lg">
+                                <span class="text-2xl font-bold">3</span>
+                            </div>
+                            <h3 class="text-xl font-bold mb-2" data-translate="step3_title">Скачайте</h3>
+                            <p class="text-gray-600" data-translate="step3_desc">Получите очищенную аудиодорожку в высоком качестве.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Pricing Section -->
+            <section id="pricing" class="py-20 bg-white">
+                <div class="container mx-auto px-6 text-center">
+                    <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4" data-translate="pricing_title">Выберите свой тариф</h2>
+                    <p class="text-lg text-gray-600 max-w-2xl mx-auto mb-12" data-translate="pricing_subtitle">Начните бесплатно или выберите пакет минут для больших объёмов.</p>
+                    <div class="grid lg:grid-cols-3 gap-8 max-w-4xl mx-auto items-start">
+                        <!-- Plan 1: Free -->
+                        <div class="border border-gray-200 rounded-2xl p-8">
+                            <h3 class="text-xl font-bold mb-2" data-translate="plan1_name">Бесплатно</h3>
+                            <p class="text-4xl font-extrabold mb-4">$0</p>
+                            <p class="text-gray-500 mb-6 h-12" data-translate="plan1_desc">Для тестирования и коротких аудио.</p>
+                            <button class="w-full px-6 py-3 font-semibold text-violet-700 bg-violet-100 rounded-lg hover:bg-violet-200 transition-all" data-translate="plan_cta_free">Начать бесплатно</button>
+                            <ul class="text-left mt-6 space-y-3 text-gray-600">
+                                <li class="flex items-center"><svg class="w-5 h-5 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg><span data-translate="plan1_f1">5 минут в день</span></li>
+                                <li class="flex items-center"><svg class="w-5 h-5 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg><span data-translate="plan1_f2">Обработка в браузере</span></li>
+                                <li class="flex items-center"><svg class="w-5 h-5 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg><span data-translate="plan1_f3">Стандартное качество</span></li>
+                            </ul>
+                        </div>
+                        <!-- Plan 2: Pro -->
+                        <div class="border-2 border-violet-600 rounded-2xl p-8 shadow-2xl shadow-violet-500/10 relative">
+                             <div class="absolute top-0 -translate-y-1/2 left-1/2 -translate-x-1/2 px-4 py-1 bg-violet-600 text-white text-sm font-semibold rounded-full" data-translate="plan_popular">Популярный</div>
+                            <h3 class="text-xl font-bold mb-2" data-translate="plan2_name">60 минут</h3>
+                            <p class="text-4xl font-extrabold mb-4">$9<span class="text-base font-medium text-gray-500" data-translate="plan_per_month">/мес</span></p>
+                             <p class="text-gray-500 mb-6 h-12" data-translate="plan2_desc">Для подкастеров и создателей контента.</p>
+                            <button class="w-full px-6 py-3 font-semibold text-white bg-violet-600 rounded-lg hover:bg-violet-700 transition-all" data-translate="plan_cta_buy">Купить</button>
+                            <ul class="text-left mt-6 space-y-3 text-gray-600">
+                                <li class="flex items-center"><svg class="w-5 h-5 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg><span data-translate="plan2_f1">60 минут в месяц</span></li>
+                                <li class="flex items-center"><svg class="w-5 h-5 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg><span data-translate="plan2_f2">Приоритетная очередь</span></li>
+                                <li class="flex items-center"><svg class="w-5 h-5 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg><span data-translate="plan2_f3">Высокое качество</span></li>
+                                <li class="flex items-center"><svg class="w-5 h-5 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg><span data-translate="plan2_f4">История файлов</span></li>
+                            </ul>
+                        </div>
+                        <!-- Plan 3: Business -->
+                        <div class="border border-gray-200 rounded-2xl p-8">
+                            <h3 class="text-xl font-bold mb-2" data-translate="plan3_name">300 минут</h3>
+                            <p class="text-4xl font-extrabold mb-4">$29<span class="text-base font-medium text-gray-500" data-translate="plan_per_month">/мес</span></p>
+                            <p class="text-gray-500 mb-6 h-12" data-translate="plan3_desc">Для студий, агентств и профессионалов.</p>
+                            <button class="w-full px-6 py-3 font-semibold text-violet-700 bg-violet-100 rounded-lg hover:bg-violet-200 transition-all" data-translate="plan_cta_buy">Купить</button>
+                            <ul class="text-left mt-6 space-y-3 text-gray-600">
+                                <li class="flex items-center"><svg class="w-5 h-5 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg><span data-translate="plan3_f1">300 минут в месяц</span></li>
+                                <li class="flex items-center"><svg class="w-5 h-5 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg><span data-translate="plan3_f2">Пакетная обработка</span></li>
+                                <li class="flex items-center"><svg class="w-5 h-5 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg><span data-translate="plan3_f3">Поддержка видео</span></li>
+                                <li class="flex items-center"><svg class="w-5 h-5 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg><span data-translate="plan3_f4">Доступ к API</span></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- FAQ Section -->
+            <section id="faq" class="py-20 bg-gray-50">
+                <div class="container mx-auto px-6 max-w-3xl">
+                    <h2 class="text-3xl md:text-4xl font-bold text-center mb-10" data-translate="faq_title">Часто задаваемые вопросы</h2>
+                    <div class="space-y-4">
+                        <!-- FAQ Item 1 -->
+                        <details class="group bg-white p-6 rounded-lg shadow-sm">
+                            <summary class="flex justify-between items-center font-medium cursor-pointer list-none">
+                                <span data-translate="faq1_q">Это безопасно? Мои файлы куда-то отправляются?</span>
+                                <span class="transition group-open:rotate-180">
+                                    <svg fill="none" height="24" shape-rendering="geometricPrecision" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" viewBox="0 0 24 24" width="24"><path d="M6 9l6 6 6-6"></path></svg>
+                                </span>
+                            </summary>
+                            <p class="text-gray-600 mt-3" data-translate="faq1_a">
+                                Для бесплатного тарифа вся обработка происходит локально на вашем устройстве, аудиофайлы никогда не покидают ваш компьютер. Для платных тарифов мы используем защищенные серверы для более качественной обработки и удаляем файлы сразу после завершения.
+                            </p>
+                        </details>
+                        <!-- FAQ Item 2 -->
+                        <details class="group bg-white p-6 rounded-lg shadow-sm">
+                             <summary class="flex justify-between items-center font-medium cursor-pointer list-none">
+                                <span data-translate="faq2_q">Какие форматы файлов поддерживаются?</span>
+                                <span class="transition group-open:rotate-180">
+                                    <svg fill="none" height="24" shape-rendering="geometricPrecision" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" viewBox="0 0 24 24" width="24"><path d="M6 9l6 6 6-6"></path></svg>
+                                </span>
+                            </summary>
+                            <p class="text-gray-600 mt-3" data-translate="faq2_a">
+                                Мы поддерживаем самые популярные аудиоформаты: MP3, WAV, FLAC, M4A, OGG и другие. Если у вас возникли проблемы с каким-либо форматом, свяжитесь с нашей поддержкой.
+                            </p>
+                        </details>
+                        <!-- FAQ Item 3 -->
+                        <details class="group bg-white p-6 rounded-lg shadow-sm">
+                            <summary class="flex justify-between items-center font-medium cursor-pointer list-none">
+                                <span data-translate="faq3_q">Что произойдет, когда закончатся минуты на платном тарифе?</span>
+                                <span class="transition group-open:rotate-180">
+                                    <svg fill="none" height="24" shape-rendering="geometricPrecision" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" viewBox="0 0 24 24" width="24"><path d="M6 9l6 6 6-6"></path></svg>
+                                </span>
+                            </summary>
+                            <p class="text-gray-600 mt-3" data-translate="faq3_a">
+                                Ваша подписка будет автоматически продлена в следующий расчетный период, и ваш баланс минут пополнится. Вы также можете докупить минуты в любой момент, если они закончатся раньше.
+                            </p>
+                        </details>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Footer -->
+        <footer class="bg-gray-900 text-white">
+            <div class="container mx-auto px-6 py-12">
+                <div class="grid md:grid-cols-3 gap-8">
+                    <div>
+                        <a href="#" class="flex items-center space-x-2">
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="text-white">
+                                <rect x="4" y="8" width="2" height="8" rx="1" fill="currentColor"/>
+                                <rect x="9" y="4" width="2" height="16" rx="1" fill="currentColor"/>
+                                <rect x="14" y="10" width="2" height="4" rx="1" fill="currentColor"/>
+                                <rect x="19" y="7" width="2" height="10" rx="1" fill="currentColor"/>
+                            </svg>
+                            <span class="font-bold text-xl">NoiseGone</span>
+                        </a>
+                        <p class="mt-4 text-gray-400" data-translate="footer_slogan">Шум ушёл. Быстрое шумоподавление прямо в браузере.</p>
+                    </div>
+                    <div class="md:col-span-2 grid grid-cols-2 sm:grid-cols-3 gap-8">
+                        <div>
+                            <h4 class="font-semibold" data-translate="footer_product">Продукт</h4>
+                            <ul class="mt-4 space-y-2">
+                                <li><a href="#features" class="text-gray-400 hover:text-white" data-translate="nav_features">Преимущества</a></li>
+                                <li><a href="#pricing" class="text-gray-400 hover:text-white" data-translate="nav_pricing">Тарифы</a></li>
+                                <li><a href="#faq" class="text-gray-400 hover:text-white" data-translate="nav_faq">FAQ</a></li>
+                            </ul>
+                        </div>
+                         <div>
+                            <h4 class="font-semibold" data-translate="footer_legal">Юр. информация</h4>
+                            <ul class="mt-4 space-y-2">
+                                <li><a href="#" class="text-gray-400 hover:text-white" data-translate="footer_privacy">Политика конфиденциальности</a></li>
+                                <li><a href="#" class="text-gray-400 hover:text-white" data-translate="footer_terms">Условия использования</a></li>
+                                <li><a href="#" class="text-gray-400 hover:text-white" data-translate="footer_impressum">Impressum</a></li>
+                            </ul>
+                        </div>
+                         <div>
+                            <h4 class="font-semibold" data-translate="footer_contact">Контакты</h4>
+                            <ul class="mt-4 space-y-2">
+                                <li><a href="mailto:support@noisegone.example.com" class="text-gray-400 hover:text-white">support@noisegone.example.com</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-8 pt-8 border-t border-gray-800 text-center text-gray-500 text-sm">
+                    <p data-translate="footer_copy">&copy; 2025 NoiseGone. Все права защищены.</p>
+                </div>
+            </div>
+        </footer>
+
+    </div>
+
+    <script>
+        // --- TRANSLATION DATA ---
+        const translations = {
+            ru: {
+                // Nav
+                nav_features: "Преимущества",
+                nav_pricing: "Тарифы",
+                nav_faq: "FAQ",
+                nav_signin: "Войти",
+                // Hero
+                hero_title: "Удаляйте шум из аудио за секунды",
+                hero_subtitle: "Наш ИИ-алгоритм обрабатывает звук прямо в вашем браузере. Быстро, безопасно и бесплатно до 5 минут в день.",
+                hero_dropzone_text: "Перетащите аудиофайл сюда",
+                hero_dropzone_or: "или",
+                hero_dropzone_button: "Выбрать файл",
+                hero_dropzone_formats: "Поддерживаемые форматы: MP3, WAV, FLAC, M4A. Макс. размер: 100MB.",
+                // Player
+                "player_title": "Результат готов!",
+                "player_before": "До",
+                "player_after": "После",
+                "player_download": "Скачать результат",
+                "player_another": "Обработать другой файл",
+                // Features
+                feature1_title: "Безопасность",
+                feature1_desc: "По умолчанию обработка на устройстве — ваш файл не уходит в облако.",
+                feature2_title: "Скорость",
+                feature2_desc: "Результат за секунды/минуты без очереди и долгих ожиданий.",
+                feature3_title: "Честный лимит",
+                feature3_desc: "5 мин/день бесплатно — достаточно, чтобы понять качество нашего сервиса.",
+                feature4_title: "Простота",
+                feature4_desc: "Открыл — бросил файл — скачал. Никакой регистрации на старте.",
+                // How it works
+                howitworks_title: "Как это работает?",
+                howitworks_subtitle: "Всего три простых шага к чистому звуку.",
+                step1_title: "Загрузите",
+                step1_desc: "Перетащите или выберите файл с вашего устройства.",
+                step2_title: "Обработка",
+                step2_desc: "Наш ИИ анализирует и удаляет фоновый шум.",
+                step3_title: "Скачайте",
+                step3_desc: "Получите очищенную аудиодорожку в высоком качестве.",
+                // Pricing
+                pricing_title: "Выберите свой тариф",
+                pricing_subtitle: "Начните бесплатно или выберите пакет минут для больших объёмов.",
+                plan1_name: "Бесплатно",
+                plan1_desc: "Для тестирования и коротких аудио.",
+                plan1_f1: "5 минут в день",
+                plan1_f2: "Обработка в браузере",
+                plan1_f3: "Стандартное качество",
+                plan2_name: "60 минут",
+                plan2_desc: "Для подкастеров и создателей контента.",
+                plan2_f1: "60 минут в месяц",
+                plan2_f2: "Приоритетная очередь",
+                plan2_f3: "Высокое качество",
+                plan2_f4: "История файлов",
+                plan3_name: "300 минут",
+                plan3_desc: "Для студий, агентств и профессионалов.",
+                plan3_f1: "300 минут в месяц",
+                plan3_f2: "Пакетная обработка",
+                plan3_f3: "Поддержка видео",
+                plan3_f4: "Доступ к API",
+                plan_per_month: "/мес",
+                plan_popular: "Популярный",
+                plan_cta_free: "Начать бесплатно",
+                plan_cta_buy: "Купить",
+                // FAQ
+                faq_title: "Часто задаваемые вопросы",
+                faq1_q: "Это безопасно? Мои файлы куда-то отправляются?",
+                faq1_a: "Для бесплатного тарифа вся обработка происходит локально на вашем устройстве, аудиофайлы никогда не покидают ваш компьютер. Для платных тарифов мы используем защищенные серверы для более качественной обработки и удаляем файлы сразу после завершения.",
+                faq2_q: "Какие форматы файлов поддерживаются?",
+                faq2_a: "Мы поддерживаем самые популярные аудиоформаты: MP3, WAV, FLAC, M4A, OGG и другие. Если у вас возникли проблемы с каким-либо форматом, свяжитесь с нашей поддержкой.",
+                faq3_q: "Что произойдет, когда закончатся минуты на платном тарифе?",
+                faq3_a: "Ваша подписка будет автоматически продлена в следующий расчетный период, и ваш баланс минут пополнится. Вы также можете докупить минуты в любой момент, если они закончатся раньше.",
+                // Footer
+                footer_slogan: "Шум ушёл. Быстрое шумоподавление прямо в браузере.",
+                footer_product: "Продукт",
+                footer_legal: "Юр. информация",
+                footer_contact: "Контакты",
+                footer_privacy: "Политика конфиденциальности",
+                footer_terms: "Условия использования",
+                footer_impressum: "Impressum",
+                footer_copy: "© 2025 NoiseGone. Все права защищены.",
+                 // Statuses
+                "status_uploading": "Загрузка...",
+                "status_processing": "Обработка...",
+                "status_ready": "Готово!"
+            },
+            en: {
+                nav_features: "Features",
+                nav_pricing: "Pricing",
+                nav_faq: "FAQ",
+                nav_signin: "Sign In",
+                hero_title: "Remove Noise From Audio in Seconds",
+                hero_subtitle: "Our AI algorithm processes sound right in your browser. Fast, secure, and free for up to 5 minutes a day.",
+                hero_dropzone_text: "Drag and drop your audio file here",
+                hero_dropzone_or: "or",
+                hero_dropzone_button: "Choose File",
+                hero_dropzone_formats: "Supported formats: MP3, WAV, FLAC, M4A. Max size: 100MB.",
+                player_title: "Result is Ready!",
+                player_before: "Before",
+                player_after: "After",
+                player_download: "Download Result",
+                player_another: "Process Another File",
+                feature1_title: "Security",
+                feature1_desc: "By default, processing is done on your device — your file never leaves your computer.",
+                feature2_title: "Speed",
+                feature2_desc: "Get results in seconds/minutes without queues or long waits.",
+                feature3_title: "Fair Limit",
+                feature3_desc: "5 min/day for free — enough to experience the quality of our service.",
+                feature4_title: "Simplicity",
+                feature4_desc: "Open — drop a file — download. No registration required to start.",
+                howitworks_title: "How does it work?",
+                howitworks_subtitle: "Just three simple steps to clean audio.",
+                step1_title: "Upload",
+                step1_desc: "Drag and drop or select a file from your device.",
+                step2_title: "Processing",
+                step2_desc: "Our AI analyzes and removes background noise.",
+                step3_title: "Download",
+                step3_desc: "Get your cleaned audio track in high quality.",
+                pricing_title: "Choose Your Plan",
+                pricing_subtitle: "Start for free or choose a minute package for larger volumes.",
+                plan1_name: "Free",
+                plan1_desc: "For testing and short audio clips.",
+                plan1_f1: "5 minutes per day",
+                plan1_f2: "In-browser processing",
+                plan1_f3: "Standard quality",
+                plan2_name: "60 Minutes",
+                plan2_desc: "For podcasters and content creators.",
+                plan2_f1: "60 minutes per month",
+                plan2_f2: "Priority queue",
+                plan2_f3: "High quality",
+                plan2_f4: "File history",
+                plan3_name: "300 Minutes",
+                plan3_desc: "For studios, agencies, and professionals.",
+                plan3_f1: "300 minutes per month",
+                plan3_f2: "Batch processing",
+                plan3_f3: "Video support",
+                plan3_f4: "API access",
+                plan_per_month: "/mo",
+                plan_popular: "Popular",
+                plan_cta_free: "Start for Free",
+                plan_cta_buy: "Buy Now",
+                faq_title: "Frequently Asked Questions",
+                faq1_q: "Is it secure? Are my files sent anywhere?",
+                faq1_a: "For the free tier, all processing happens locally on your device; audio files never leave your computer. For paid tiers, we use secure servers for higher-quality processing and delete files immediately after completion.",
+                faq2_q: "What file formats are supported?",
+                faq2_a: "We support the most popular audio formats: MP3, WAV, FLAC, M4A, OGG, and others. If you have trouble with any format, please contact our support.",
+                faq3_q: "What happens when I run out of minutes on a paid plan?",
+                faq3_a: "Your subscription will automatically renew on the next billing date, and your minute balance will be refilled. You can also purchase more minutes at any time if you run out early.",
+                footer_slogan: "Noise is gone. Fast noise reduction right in your browser.",
+                footer_product: "Product",
+                footer_legal: "Legal",
+                footer_contact: "Contact",
+                footer_privacy: "Privacy Policy",
+                footer_terms: "Terms of Service",
+                footer_impressum: "Impressum",
+                footer_copy: "© 2025 NoiseGone. All rights reserved.",
+                status_uploading: "Uploading...",
+                status_processing: "Processing...",
+                status_ready: "Ready!"
+            },
+            de: {
+                nav_features: "Merkmale",
+                nav_pricing: "Preise",
+                nav_faq: "FAQ",
+                nav_signin: "Anmelden",
+                hero_title: "Audio-Rauschen in Sekunden entfernen",
+                hero_subtitle: "Unser KI-Algorithmus verarbeitet den Ton direkt in Ihrem Browser. Schnell, sicher und kostenlos für bis zu 5 Minuten pro Tag.",
+                hero_dropzone_text: "Ziehen Sie Ihre Audiodatei hierher",
+                hero_dropzone_or: "oder",
+                hero_dropzone_button: "Datei wählen",
+                hero_dropzone_formats: "Unterstützte Formate: MP3, WAV, FLAC, M4A. Max. Größe: 100MB.",
+                player_title: "Ergebnis ist fertig!",
+                player_before: "Vorher",
+                player_after: "Nachher",
+                player_download: "Ergebnis herunterladen",
+                player_another: "Andere Datei verarbeiten",
+                feature1_title: "Sicherheit",
+                feature1_desc: "Die Verarbeitung erfolgt standardmäßig auf Ihrem Gerät – Ihre Datei verlässt niemals Ihren Computer.",
+                feature2_title: "Geschwindigkeit",
+                feature2_desc: "Erhalten Sie Ergebnisse in Sekunden/Minuten ohne Warteschlangen oder lange Wartezeiten.",
+                feature3_title: "Faires Limit",
+                feature3_desc: "5 Min./Tag kostenlos – genug, um die Qualität unseres Dienstes zu erleben.",
+                feature4_title: "Einfachheit",
+                feature4_desc: "Öffnen – Datei ablegen – herunterladen. Keine Registrierung zum Starten erforderlich.",
+                howitworks_title: "Wie funktioniert es?",
+                howitworks_subtitle: "Nur drei einfache Schritte zu sauberem Audio.",
+                step1_title: "Hochladen",
+                step1_desc: "Ziehen Sie eine Datei von Ihrem Gerät oder wählen Sie sie aus.",
+                step2_title: "Verarbeitung",
+                step2_desc: "Unsere KI analysiert und entfernt Hintergrundgeräusche.",
+                step3_title: "Herunterladen",
+                step3_desc: "Erhalten Sie Ihre bereinigte Audiospur in hoher Qualität.",
+                pricing_title: "Wählen Sie Ihren Plan",
+                pricing_subtitle: "Starten Sie kostenlos oder wählen Sie ein Minutenpaket für größere Mengen.",
+                plan1_name: "Kostenlos",
+                plan1_desc: "Zum Testen und für kurze Audioclips.",
+                plan1_f1: "5 Minuten pro Tag",
+                plan1_f2: "Verarbeitung im Browser",
+                plan1_f3: "Standardqualität",
+                plan2_name: "60 Minuten",
+                plan2_desc: "Für Podcaster und Content-Ersteller.",
+                plan2_f1: "60 Minuten pro Monat",
+                plan2_f2: "Priorisierte Warteschlange",
+                plan2_f3: "Hohe Qualität",
+                plan2_f4: "Dateiverlauf",
+                plan3_name: "300 Minuten",
+                plan3_desc: "Für Studios, Agenturen und Profis.",
+                plan3_f1: "300 Minuten pro Monat",
+                plan3_f2: "Stapelverarbeitung",
+                plan3_f3: "Video-Unterstützung",
+                plan3_f4: "API-Zugang",
+                plan_per_month: "/Mon",
+                plan_popular: "Beliebt",
+                plan_cta_free: "Kostenlos starten",
+                plan_cta_buy: "Jetzt kaufen",
+                faq_title: "Häufig gestellte Fragen",
+                faq1_q: "Ist es sicher? Werden meine Dateien irgendwohin gesendet?",
+                faq1_a: "Im kostenlosen Tarif erfolgt die gesamte Verarbeitung lokal auf Ihrem Gerät; Audiodateien verlassen niemals Ihren Computer. Bei kostenpflichtigen Tarifen verwenden wir sichere Server für eine qualitativ hochwertigere Verarbeitung und löschen die Dateien sofort nach Abschluss.",
+                faq2_q: "Welche Dateiformate werden unterstützt?",
+                faq2_a: "Wir unterstützen die gängigsten Audioformate: MP3, WAV, FLAC, M4A, OGG und andere. Wenn Sie Probleme mit einem Format haben, wenden Sie sich bitte an unseren Support.",
+                faq3_q: "Was passiert, wenn meine Minuten in einem kostenpflichtigen Plan aufgebraucht sind?",
+                faq3_a: "Ihr Abonnement wird am nächsten Abrechnungsdatum automatisch verlängert, und Ihr Minutenguthaben wird wieder aufgefüllt. Sie können auch jederzeit weitere Minuten kaufen, wenn Sie früher keine mehr haben.",
+                footer_slogan: "Rauschen weg. Schnelle Rauschunterdrückung direkt im Browser.",
+                footer_product: "Produkt",
+                footer_legal: "Rechtliches",
+                footer_contact: "Kontakt",
+                footer_privacy: "Datenschutzrichtlinie",
+                footer_terms: "Nutzungsbedingungen",
+                footer_impressum: "Impressum",
+                footer_copy: "© 2025 NoiseGone. Alle Rechte vorbehalten.",
+                status_uploading: "Wird hochgeladen...",
+                status_processing: "Verarbeitung...",
+                status_ready: "Fertig!"
+            }
         };
 
-        // Ждем полной загрузки DOM перед монтированием приложения
-        document.addEventListener('DOMContentLoaded', () => {
-            const container = document.getElementById('root');
-            if (container) {
-                const root = createRoot(container);
-                root.render(
-                    <React.StrictMode>
-                        <App />
-                    </React.StrictMode>
-                );
-            } else {
-                console.error('Не удалось найти корневой элемент для монтирования React-приложения.');
-            }
+        // --- i18n LOGIC ---
+        const languageSwitcher = document.getElementById('language-switcher');
+        let currentLang = localStorage.getItem('lang') || 'ru';
+
+        function setLanguage(lang) {
+            currentLang = lang;
+            localStorage.setItem('lang', lang);
+            document.documentElement.lang = lang;
+            languageSwitcher.value = lang;
+
+            document.querySelectorAll('[data-translate]').forEach(el => {
+                const key = el.getAttribute('data-translate');
+                if (translations[lang] && translations[lang][key]) {
+                    el.textContent = translations[lang][key];
+                }
+            });
+             // Update titles that might not have the data-translate attribute
+            document.title = {
+                ru: 'NoiseGone — Удаляйте шум из аудио за секунды',
+                en: 'NoiseGone — Remove Noise From Audio in Seconds',
+                de: 'NoiseGone — Audio-Rauschen in Sekunden entfernen'
+            }[lang];
+        }
+
+        languageSwitcher.addEventListener('change', (event) => {
+            setLanguage(event.target.value);
         });
+
+        // --- DRAG & DROP & UPLOAD LOGIC ---
+        const dropzone = document.getElementById('dropzone');
+        const fileInput = document.getElementById('file-input');
+        const uploadButton = document.getElementById('upload-button');
+        const resultSection = document.getElementById('result-section');
+        const heroSection = document.getElementById('hero');
+        const progressBar = document.getElementById('upload-progress-bar');
+        const statusText = document.getElementById('upload-status');
+        const playerContainer = document.getElementById('player-container');
+        const processAnotherButton = document.getElementById('process-another');
+
+        const simulateProgress = () => {
+            heroSection.classList.add('hidden');
+            resultSection.classList.remove('hidden');
+            playerContainer.classList.add('hidden');
+
+            let width = 0;
+            statusText.textContent = translations[currentLang]['status_uploading'];
+            
+            // 1. Upload simulation
+            const uploadInterval = setInterval(() => {
+                if (width >= 40) {
+                    clearInterval(uploadInterval);
+                    statusText.textContent = translations[currentLang]['status_processing'];
+                    // 2. Processing simulation
+                    const processInterval = setInterval(() => {
+                        if (width >= 100) {
+                            clearInterval(processInterval);
+                            statusText.textContent = translations[currentLang]['status_ready'];
+                            playerContainer.classList.remove('hidden');
+                        } else {
+                            width += 2;
+                            progressBar.style.width = width + '%';
+                        }
+                    }, 50);
+                } else {
+                    width++;
+                    progressBar.style.width = width + '%';
+                }
+            }, 20);
+        };
+        
+        const handleFile = (file) => {
+            if (file && file.type.startsWith('audio/')) {
+                // Here you would start the actual ffmpeg.wasm processing
+                // For now, we just simulate the progress
+                console.log('File selected:', file.name);
+                simulateProgress();
+            } else {
+                alert('Please select a valid audio file.');
+            }
+        };
+
+        dropzone.addEventListener('click', () => fileInput.click());
+        uploadButton.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', (e) => handleFile(e.target.files[0]));
+
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropzone.addEventListener(eventName, e => {
+                e.preventDefault();
+                e.stopPropagation();
+            });
+        });
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropzone.addEventListener(eventName, () => dropzone.classList.add('dropzone-active'));
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropzone.addEventListener(eventName, () => dropzone.classList.remove('dropzone-active'));
+        });
+
+        dropzone.addEventListener('drop', (e) => {
+            handleFile(e.dataTransfer.files[0]);
+        });
+        
+        processAnotherButton.addEventListener('click', () => {
+            resultSection.classList.add('hidden');
+            heroSection.classList.remove('hidden');
+            progressBar.style.width = '0%';
+        });
+
+
+        // --- A/B PLAYER LOGIC ---
+        const slider = document.getElementById('ab-slider');
+        const afterContainer = document.getElementById('waveform-after-container');
+
+        slider.addEventListener('input', (e) => {
+            afterContainer.style.width = e.target.value + '%';
+        });
+
+
+        // --- INITIALIZATION ---
+        document.addEventListener('DOMContentLoaded', () => {
+            setLanguage(currentLang);
+        });
+
     </script>
 </body>
 </html>
