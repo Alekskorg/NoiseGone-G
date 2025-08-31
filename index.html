@@ -1,408 +1,429 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NoiseGone</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 antialiased p-8">
+    <div id="root"></div>
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import ReactDOM from 'react-dom/client';
+    <script type="text/babel">
+        const { createContext, useContext, useState, useEffect } = React;
+        const { createRoot } = ReactDOM;
 
-// Создаем объект с переводами
-const translations = {
-  ru: {
-    logoText: 'NoiseGone',
-    heroTitle: 'Удаление шума из аудио',
-    heroSubtitle: 'Используйте наш сервис, чтобы легко очистить ваши аудиофайлы',
-    selectFile: 'Выберите файл',
-    fileSelected: 'Файл выбран',
-    dropMessage: 'или перетащите файл сюда',
-    processing: 'Обработка...',
-    featuresTitle: 'Наши возможности',
-    feature1Title: 'Высокая точность',
-    feature1Desc: 'Наши алгоритмы обеспечивают превосходное качество очистки.',
-    feature2Title: 'Мгновенная обработка',
-    feature2Desc: 'Получите результат за считанные секунды.',
-    feature3Title: 'Поддержка форматов',
-    feature3Desc: 'Работает с MP3, WAV, FLAC и другими популярными форматами.',
-    howItWorksTitle: 'Как это работает',
-    step1: 'Шаг 1: Загрузите аудио',
-    step1Desc: 'Выберите файл с вашего компьютера или перетащите его в область загрузки.',
-    step2: 'Шаг 2: Обработка',
-    step2Desc: 'Наши серверы обработают файл, удалив все шумы.',
-    step3: 'Шаг 3: Скачайте результат',
-    step3Desc: 'Получите чистый аудиофайл без посторонних шумов.',
-    pricingTitle: 'Тарифные планы',
-    freePlan: 'Бесплатный план',
-    proPlan: 'Pro-план',
-    premiumPlan: 'Премиум-план',
-    privacyPolicy: 'Политика конфиденциальности',
-    termsOfService: 'Условия использования',
-    cookieNotice: 'Уведомление о файлах cookie',
-    copyright: '© 2024 NoiseGone. Все права защищены.',
-    download: 'Скачать',
-    reset: 'Сбросить',
-    errorMessage: 'Ошибка: не удалось обработать файл.',
-    start: 'Начать',
-  },
-  en: {
-    logoText: 'NoiseGone',
-    heroTitle: 'Audio Noise Removal',
-    heroSubtitle: 'Use our service to easily clean up your audio files',
-    selectFile: 'Select a file',
-    fileSelected: 'File selected',
-    dropMessage: 'or drag and drop here',
-    processing: 'Processing...',
-    featuresTitle: 'Our Features',
-    feature1Title: 'High Accuracy',
-    feature1Desc: 'Our algorithms ensure superior cleaning quality.',
-    feature2Title: 'Instant Processing',
-    feature2Desc: 'Get your results in a matter of seconds.',
-    feature3Title: 'Format Support',
-    feature3Desc: 'Works with MP3, WAV, FLAC and other popular formats.',
-    howItWorksTitle: 'How It Works',
-    step1: 'Step 1: Upload Audio',
-    step1Desc: 'Select a file from your computer or drag and drop it into the upload area.',
-    step2: 'Step 2: Processing',
-    step2Desc: 'Our servers will process the file, removing all noise.',
-    step3: 'Step 3: Download Result',
-    step3Desc: 'Get a clean audio file without background noise.',
-    pricingTitle: 'Pricing Plans',
-    freePlan: 'Free Plan',
-    proPlan: 'Pro Plan',
-    premiumPlan: 'Premium Plan',
-    privacyPolicy: 'Privacy Policy',
-    termsOfService: 'Terms of Service',
-    cookieNotice: 'Cookie Notice',
-    copyright: '© 2024 NoiseGone. All Rights Reserved.',
-    download: 'Download',
-    reset: 'Reset',
-    errorMessage: 'Error: Failed to process file.',
-    start: 'Start',
-  },
-  de: {
-    logoText: 'NoiseGone',
-    heroTitle: 'Audio-Rauschunterdrückung',
-    heroSubtitle: 'Nutzen Sie unseren Service, um Ihre Audiodateien einfach zu bereinigen',
-    selectFile: 'Datei auswählen',
-    fileSelected: 'Datei ausgewählt',
-    dropMessage: 'oder per Drag & Drop hier ablegen',
-    processing: 'Verarbeitung...',
-    featuresTitle: 'Unsere Funktionen',
-    feature1Title: 'Hohe Genauigkeit',
-    feature1Desc: 'Unsere Algorithmen gewährleisten eine hervorragende Reinigungsqualität.',
-    feature2Title: 'Sofortige Verarbeitung',
-    feature2Desc: 'Erhalten Sie Ihre Ergebnisse in Sekundenschnelle.',
-    feature3Title: 'Formatunterstützung',
-    feature3Desc: 'Funktioniert mit MP3, WAV, FLAC и другими gängigen Formaten.',
-    howItWorksTitle: 'So funktioniert es',
-    step1: 'Schritt 1: Audio hochladen',
-    step1Desc: 'Wählen Sie eine Datei von Ihrem Computer oder ziehen Sie sie in den Upload-Bereich.',
-    step2: 'Schritt 2: Verarbeitung',
-    step2Desc: 'Unsere Server verarbeiten die Datei und entfernen alle Geräusche.',
-    step3: 'Schritt 3: Ergebnis herunterladen',
-    step3Desc: 'Erhalten Sie eine saubere Audiodatei ohne Hintergrundgeräusche.',
-    pricingTitle: 'Preispläne',
-    freePlan: 'Kostenloser Plan',
-    proPlan: 'Pro-Plan',
-    premiumPlan: 'Premium-Plan',
-    privacyPolicy: 'Datenschutzrichtlinie',
-    termsOfService: 'Nutzungsbedingungen',
-    cookieNotice: 'Cookie-Hinweis',
-    copyright: '© 2024 NoiseGone. Alle Rechte vorbehalten.',
-    download: 'Herunterladen',
-    reset: 'Zurücksetzen',
-    errorMessage: 'Fehler: Datei konnte nicht verarbeitet werden.',
-    start: 'Starten',
-  },
-};
+        // Создаем объект с переводами
+        const translations = {
+            ru: {
+                logoText: 'NoiseGone',
+                heroTitle: 'Удаление шума из аудио',
+                heroSubtitle: 'Используйте наш сервис, чтобы легко очистить ваши аудиофайлы',
+                selectFile: 'Выберите файл',
+                fileSelected: 'Файл выбран',
+                dropMessage: 'или перетащите файл сюда',
+                processing: 'Обработка...',
+                featuresTitle: 'Наши возможности',
+                feature1Title: 'Высокая точность',
+                feature1Desc: 'Наши алгоритмы обеспечивают превосходное качество очистки.',
+                feature2Title: 'Мгновенная обработка',
+                feature2Desc: 'Получите результат за считанные секунды.',
+                feature3Title: 'Поддержка форматов',
+                feature3Desc: 'Работает с MP3, WAV, FLAC и другими популярными форматами.',
+                howItWorksTitle: 'Как это работает',
+                step1: 'Шаг 1: Загрузите аудио',
+                step1Desc: 'Выберите файл с вашего компьютера или перетащите его в область загрузки.',
+                step2: 'Шаг 2: Обработка',
+                step2Desc: 'Наши серверы обработают файл, удалив все шумы.',
+                step3: 'Шаг 3: Скачайте результат',
+                step3Desc: 'Получите чистый аудиофайл без посторонних шумов.',
+                pricingTitle: 'Тарифные планы',
+                freePlan: 'Бесплатный план',
+                proPlan: 'Pro-план',
+                premiumPlan: 'Премиум-план',
+                privacyPolicy: 'Политика конфиденциальности',
+                termsOfService: 'Условия использования',
+                cookieNotice: 'Уведомление о файлах cookie',
+                copyright: '© 2024 NoiseGone. Все права защищены.',
+                download: 'Скачать',
+                reset: 'Сбросить',
+                errorMessage: 'Ошибка: не удалось обработать файл.',
+                start: 'Начать',
+            },
+            en: {
+                logoText: 'NoiseGone',
+                heroTitle: 'Audio Noise Removal',
+                heroSubtitle: 'Use our service to easily clean up your audio files',
+                selectFile: 'Select a file',
+                fileSelected: 'File selected',
+                dropMessage: 'or drag and drop here',
+                processing: 'Processing...',
+                featuresTitle: 'Our Features',
+                feature1Title: 'High Accuracy',
+                feature1Desc: 'Our algorithms ensure superior cleaning quality.',
+                feature2Title: 'Instant Processing',
+                feature2Desc: 'Get your results in a matter of seconds.',
+                feature3Title: 'Format Support',
+                feature3Desc: 'Works with MP3, WAV, FLAC and other popular formats.',
+                howItWorksTitle: 'How It Works',
+                step1: 'Step 1: Upload Audio',
+                step1Desc: 'Select a file from your computer or drag and drop it into the upload area.',
+                step2: 'Step 2: Processing',
+                step2Desc: 'Our servers will process the file, removing all noise.',
+                step3: 'Step 3: Download Result',
+                step3Desc: 'Get a clean audio file without background noise.',
+                pricingTitle: 'Pricing Plans',
+                freePlan: 'Free Plan',
+                proPlan: 'Pro Plan',
+                premiumPlan: 'Premium Plan',
+                privacyPolicy: 'Privacy Policy',
+                termsOfService: 'Terms of Service',
+                cookieNotice: 'Cookie Notice',
+                copyright: '© 2024 NoiseGone. All Rights Reserved.',
+                download: 'Download',
+                reset: 'Reset',
+                errorMessage: 'Error: Failed to process file.',
+                start: 'Start',
+            },
+            de: {
+                logoText: 'NoiseGone',
+                heroTitle: 'Audio-Rauschunterdrückung',
+                heroSubtitle: 'Nutzen Sie unseren Service, um Ihre Audiodateien einfach zu bereinigen',
+                selectFile: 'Datei auswählen',
+                fileSelected: 'Datei ausgewählt',
+                dropMessage: 'oder per Drag & Drop hier ablegen',
+                processing: 'Verarbeitung...',
+                featuresTitle: 'Unsere Funktionen',
+                feature1Title: 'Hohe Genauigkeit',
+                feature1Desc: 'Unsere Algorithmen gewährleisten eine hervorragende Reinigungsqualität.',
+                feature2Title: 'Sofortige Verarbeitung',
+                feature2Desc: 'Erhalten Sie Ihre Ergebnisse in Sekundenschnelle.',
+                feature3Title: 'Formatunterstützung',
+                feature3Desc: 'Funktioniert mit MP3, WAV, FLAC и другими gängigen Formaten.',
+                howItWorksTitle: 'So funktioniert es',
+                step1: 'Schritt 1: Audio hochladen',
+                step1Desc: 'Wählen Sie eine Datei von Ihrem Computer oder ziehen Sie sie in den Upload-Bereich.',
+                step2: 'Schritt 2: Verarbeitung',
+                step2Desc: 'Unsere Server verarbeiten die Datei und entfernen alle Geräusche.',
+                step3: 'Schritt 3: Ergebnis herunterladen',
+                step3Desc: 'Erhalten Sie eine saubere Audiodatei ohne Hintergrundgeräusche.',
+                pricingTitle: 'Preispläne',
+                freePlan: 'Kostenloser Plan',
+                proPlan: 'Pro-Plan',
+                premiumPlan: 'Premium-Plan',
+                privacyPolicy: 'Datenschutzrichtlinie',
+                termsOfService: 'Nutzungsbedingungen',
+                cookieNotice: 'Cookie-Hinweis',
+                copyright: '© 2024 NoiseGone. Alle Rechte vorbehalten.',
+                download: 'Herunterladen',
+                reset: 'Zurücksetzen',
+                errorMessage: 'Fehler: Datei konnte nicht verarbeitet werden.',
+                start: 'Starten',
+            },
+        };
 
-// Создаем контекст для доступа к переводам и языку
-const LanguageContext = createContext();
+        // Создаем контекст для доступа к переводам и языку
+        const LanguageContext = createContext();
 
-// Компонент-провайдер для контекста языка
-const LanguageProvider = ({ children }) => {
-  const [lang, setLang] = useState('ru'); // Устанавливаем язык по умолчанию
-  const t = (key) => translations[lang][key] || key; // Функция перевода
+        // Компонент-провайдер для контекста языка
+        const LanguageProvider = ({ children }) => {
+            const [lang, setLang] = useState('ru'); // Устанавливаем язык по умолчанию
+            const t = (key) => translations[lang][key] || key; // Функция перевода
 
-  return (
-    <LanguageContext.Provider value={{ lang, setLang, t }}>
-      {children}
-    </LanguageContext.Provider>
-  );
-};
+            return (
+                <LanguageContext.Provider value={{ lang, setLang, t }}>
+                    {children}
+                </LanguageContext.Provider>
+            );
+        };
 
-// Хук для использования контекста в компонентах
-const useLanguage = () => useContext(LanguageContext);
+        // Хук для использования контекста в компонентах
+        const useLanguage = () => useContext(LanguageContext);
 
-// Компонент для переключения языка
-const LanguageSwitcher = () => {
-  const { lang, setLang } = useLanguage();
-  const languages = ['ru', 'en', 'de'];
+        // Компонент для переключения языка
+        const LanguageSwitcher = () => {
+            const { lang, setLang } = useLanguage();
+            const languages = ['ru', 'en', 'de'];
 
-  return (
-    <div className="flex justify-center space-x-4 p-4">
-      {languages.map(language => (
-        <button 
-          key={language}
-          className={`px-4 py-2 rounded-full font-semibold transition-transform duration-300 transform hover:scale-105 ${
-            lang === language ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-          }`}
-          onClick={() => setLang(language)}
-        >
-          {language.toUpperCase()}
-        </button>
-      ))}
-    </div>
-  );
-};
+            return (
+                <div className="flex justify-center space-x-4 p-4">
+                    {languages.map(language => (
+                        <button 
+                            key={language}
+                            className={`px-4 py-2 rounded-full font-semibold transition-transform duration-300 transform hover:scale-105 ${
+                                lang === language ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                            }`}
+                            onClick={() => setLang(language)}
+                        >
+                            {language.toUpperCase()}
+                        </button>
+                    ))}
+                </div>
+            );
+        };
 
-// Вспомогательный компонент для перевода текста по ключу
-const TranslateText = ({ textKey }) => {
-  const { t } = useLanguage();
-  return <>{t(textKey)}</>;
-};
+        // Вспомогательный компонент для перевода текста по ключу
+        const TranslateText = ({ textKey }) => {
+            const { t } = useLanguage();
+            return <>{t(textKey)}</>;
+        };
 
-// Вспомогательные компоненты для демонстрации структуры
-const FileUploadSection = () => {
-  const { t } = useLanguage();
-  const [selectedFile, setSelectedFile] = useState(null);
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [message, setMessage] = useState('');
+        // Вспомогательные компоненты для демонстрации структуры
+        const FileUploadSection = () => {
+            const { t } = useLanguage();
+            const [selectedFile, setSelectedFile] = useState(null);
+            const [isProcessing, setIsProcessing] = useState(false);
+            const [message, setMessage] = useState('');
 
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setSelectedFile(file);
-      setMessage('');
-    }
-  };
+            const handleFileChange = (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    setSelectedFile(file);
+                    setMessage('');
+                }
+            };
 
-  const handleProcess = () => {
-    if (selectedFile) {
-      setIsProcessing(true);
-      setMessage(t('processing'));
-      // Имитация обработки
-      setTimeout(() => {
-        setIsProcessing(false);
-        setMessage('');
-        // Имитация успешной обработки
-        // Можно добавить логику для отображения обработанного файла
-      }, 3000);
-    } else {
-      setMessage(t('errorMessage'));
-    }
-  };
+            const handleProcess = () => {
+                if (selectedFile) {
+                    setIsProcessing(true);
+                    setMessage(t('processing'));
+                    // Имитация обработки
+                    setTimeout(() => {
+                        setIsProcessing(false);
+                        setMessage('');
+                        // Имитация успешной обработки
+                        // Можно добавить логику для отображения обработанного файла
+                    }, 3000);
+                } else {
+                    setMessage(t('errorMessage'));
+                }
+            };
 
-  const handleDragOver = (e) => {
-    e.preventDefault();
-  };
+            const handleDragOver = (e) => {
+                e.preventDefault();
+            };
 
-  const handleDrop = (e) => {
-    e.preventDefault();
-    const file = e.dataTransfer.files[0];
-    if (file) {
-      setSelectedFile(file);
-      setMessage('');
-    }
-  };
+            const handleDrop = (e) => {
+                e.preventDefault();
+                const file = e.dataTransfer.files[0];
+                if (file) {
+                    setSelectedFile(file);
+                    setMessage('');
+                }
+            };
 
-  return (
-    <div className="flex flex-col items-center space-y-4">
-      <div 
-        className="w-full max-w-lg bg-gray-50 border-2 border-dashed border-gray-300 rounded-xl p-8 text-center space-y-4 transition-colors duration-300 hover:border-indigo-500"
-        onDragOver={handleDragOver}
-        onDrop={handleDrop}
-      >
-        <div className="flex items-center justify-center">
-          <input 
-            type="file" 
-            id="file-upload" 
-            onChange={handleFileChange} 
-            className="hidden"
-          />
-          <label htmlFor="file-upload" className="bg-indigo-600 text-white font-semibold py-3 px-6 rounded-full cursor-pointer hover:bg-indigo-700 transition">
-            {t('selectFile')}
-          </label>
-        </div>
-        <p className="text-gray-500">
-          {t('dropMessage')}
-        </p>
-      </div>
-      {selectedFile && (
-        <div className="text-sm text-gray-600">
-          <p>{t('fileSelected')}: {selectedFile.name}</p>
-        </div>
-      )}
-      {message && (
-        <div className="text-sm text-center font-medium text-gray-600">
-          {message}
-        </div>
-      )}
-      <button 
-        onClick={handleProcess}
-        disabled={!selectedFile || isProcessing}
-        className="bg-green-500 text-white font-semibold py-3 px-8 rounded-full shadow-lg hover:bg-green-600 transition-colors duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
-      >
-        {isProcessing ? t('processing') : t('start')}
-      </button>
-    </div>
-  );
-};
+            return (
+                <div className="flex flex-col items-center space-y-4">
+                    <div 
+                        className="w-full max-w-lg bg-gray-50 border-2 border-dashed border-gray-300 rounded-xl p-8 text-center space-y-4 transition-colors duration-300 hover:border-indigo-500"
+                        onDragOver={handleDragOver}
+                        onDrop={handleDrop}
+                    >
+                        <div className="flex items-center justify-center">
+                            <input 
+                                type="file" 
+                                id="file-upload" 
+                                onChange={handleFileChange} 
+                                className="hidden"
+                            />
+                            <label htmlFor="file-upload" className="bg-indigo-600 text-white font-semibold py-3 px-6 rounded-full cursor-pointer hover:bg-indigo-700 transition">
+                                {t('selectFile')}
+                            </label>
+                        </div>
+                        <p className="text-gray-500">
+                            {t('dropMessage')}
+                        </p>
+                    </div>
+                    {selectedFile && (
+                        <div className="text-sm text-gray-600">
+                            <p>{t('fileSelected')}: {selectedFile.name}</p>
+                        </div>
+                    )}
+                    {message && (
+                        <div className="text-sm text-center font-medium text-gray-600">
+                            {message}
+                        </div>
+                    )}
+                    <button 
+                        onClick={handleProcess}
+                        disabled={!selectedFile || isProcessing}
+                        className="bg-green-500 text-white font-semibold py-3 px-8 rounded-full shadow-lg hover:bg-green-600 transition-colors duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                        {isProcessing ? t('processing') : t('start')}
+                    </button>
+                </div>
+            );
+        };
 
-const FeatureCard = ({ titleKey, descKey }) => {
-  const { t } = useLanguage();
-  return (
-    <div className="p-6 bg-gray-50 rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300">
-      <h3 className="text-xl font-bold mb-2 text-indigo-600">
-        {t(titleKey)}
-      </h3>
-      <p className="text-gray-600">
-        {t(descKey)}
-      </p>
-    </div>
-  );
-};
+        const FeatureCard = ({ titleKey, descKey }) => {
+            const { t } = useLanguage();
+            return (
+                <div className="p-6 bg-gray-50 rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300">
+                    <h3 className="text-xl font-bold mb-2 text-indigo-600">
+                        {t(titleKey)}
+                    </h3>
+                    <p className="text-gray-600">
+                        {t(descKey)}
+                    </p>
+                </div>
+            );
+        };
 
-const StepCard = ({ stepNumber, titleKey, descKey }) => {
-  const { t } = useLanguage();
-  return (
-    <div className="flex flex-col items-center text-center p-6 bg-white rounded-lg shadow-md">
-      <div className="w-12 h-12 flex items-center justify-center bg-indigo-500 text-white rounded-full text-2xl font-bold mb-4">
-        {stepNumber}
-      </div>
-      <h3 className="text-xl font-semibold mb-2 text-gray-900">
-        {t(titleKey)}
-      </h3>
-      <p className="text-gray-600">
-        {t(descKey)}
-      </p>
-    </div>
-  );
-};
+        const StepCard = ({ stepNumber, titleKey, descKey }) => {
+            const { t } = useLanguage();
+            return (
+                <div className="flex flex-col items-center text-center p-6 bg-white rounded-lg shadow-md">
+                    <div className="w-12 h-12 flex items-center justify-center bg-indigo-500 text-white rounded-full text-2xl font-bold mb-4">
+                        {stepNumber}
+                    </div>
+                    <h3 className="text-xl font-semibold mb-2 text-gray-900">
+                        {t(titleKey)}
+                    </h3>
+                    <p className="text-gray-600">
+                        {t(descKey)}
+                    </p>
+                </div>
+            );
+        };
 
-const PricingCard = ({ titleKey }) => {
-  const { t } = useLanguage();
-  return (
-    <div className="p-6 bg-white rounded-lg shadow-xl border-2 border-transparent hover:border-indigo-500 transition-colors duration-300">
-      <h3 className="text-2xl font-bold text-center text-gray-900 mb-4">
-        {t(titleKey)}
-      </h3>
-      <ul className="list-disc list-inside text-gray-600 space-y-2">
-        <li>Свободное место</li>
-        <li>Поддержка</li>
-        <li>Без рекламы</li>
-      </ul>
-      <div className="text-center mt-6">
-        <button className="bg-indigo-600 text-white font-bold py-3 px-8 rounded-full shadow-lg hover:bg-indigo-700 transition-colors duration-300">
-          Выбрать
-        </button>
-      </div>
-    </div>
-  );
-};
+        const PricingCard = ({ titleKey }) => {
+            const { t } = useLanguage();
+            return (
+                <div className="p-6 bg-white rounded-lg shadow-xl border-2 border-transparent hover:border-indigo-500 transition-colors duration-300">
+                    <h3 className="text-2xl font-bold text-center text-gray-900 mb-4">
+                        {t(titleKey)}
+                    </h3>
+                    <ul className="list-disc list-inside text-gray-600 space-y-2">
+                        <li>Свободное место</li>
+                        <li>Поддержка</li>
+                        <li>Без рекламы</li>
+                    </ul>
+                    <div className="text-center mt-6">
+                        <button className="bg-indigo-600 text-white font-bold py-3 px-8 rounded-full shadow-lg hover:bg-indigo-700 transition-colors duration-300">
+                            Выбрать
+                        </button>
+                    </div>
+                </div>
+            );
+        };
 
-// Главный компонент приложения
-const App = () => {
-  return (
-    <LanguageProvider>
-      <div className="min-h-screen bg-gray-100 font-sans text-gray-800 antialiased p-8">
-        <div className="max-w-4xl mx-auto bg-white rounded-2xl shadow-xl overflow-hidden p-8 space-y-12">
-          
-          <LanguageSwitcher />
+        // Главный компонент приложения
+        const App = () => {
+            return (
+                <LanguageProvider>
+                    <div className="min-h-screen bg-gray-100 font-sans text-gray-800 antialiased p-8">
+                        <div className="max-w-4xl mx-auto bg-white rounded-2xl shadow-xl overflow-hidden p-8 space-y-12">
+                            
+                            <LanguageSwitcher />
 
-          {/* Секция "Герой" */}
-          <section className="text-center space-y-4">
-            <h1 className="text-5xl font-bold text-gray-900 leading-tight">
-              <TranslateText textKey="heroTitle" />
-            </h1>
-            <p className="text-xl text-gray-600">
-              <TranslateText textKey="heroSubtitle" />
-            </p>
-            <div className="mt-8">
-              <FileUploadSection />
-            </div>
-          </section>
+                            {/* Секция "Герой" */}
+                            <section className="text-center space-y-4">
+                                <h1 className="text-5xl font-bold text-gray-900 leading-tight">
+                                    <TranslateText textKey="heroTitle" />
+                                </h1>
+                                <p className="text-xl text-gray-600">
+                                    <TranslateText textKey="heroSubtitle" />
+                                </p>
+                                <div className="mt-8">
+                                    <FileUploadSection />
+                                </div>
+                            </section>
 
-          {/* Секция "Возможности" */}
-          <section className="space-y-6">
-            <h2 className="text-3xl font-bold text-center text-gray-900">
-              <TranslateText textKey="featuresTitle" />
-            </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 text-center">
-              <FeatureCard 
-                titleKey="feature1Title"
-                descKey="feature1Desc"
-              />
-              <FeatureCard 
-                titleKey="feature2Title"
-                descKey="feature2Desc"
-              />
-              <FeatureCard 
-                titleKey="feature3Title"
-                descKey="feature3Desc"
-              />
-            </div>
-          </section>
+                            {/* Секция "Возможности" */}
+                            <section className="space-y-6">
+                                <h2 className="text-3xl font-bold text-center text-gray-900">
+                                    <TranslateText textKey="featuresTitle" />
+                                </h2>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 text-center">
+                                    <FeatureCard 
+                                        titleKey="feature1Title"
+                                        descKey="feature1Desc"
+                                    />
+                                    <FeatureCard 
+                                        titleKey="feature2Title"
+                                        descKey="feature2Desc"
+                                    />
+                                    <FeatureCard 
+                                        titleKey="feature3Title"
+                                        descKey="feature3Desc"
+                                    />
+                                </div>
+                            </section>
 
-          {/* Секция "Как это работает" */}
-          <section className="space-y-6">
-            <h2 className="text-3xl font-bold text-center text-gray-900">
-              <TranslateText textKey="howItWorksTitle" />
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              <StepCard
-                stepNumber="1"
-                titleKey="step1"
-                descKey="step1Desc"
-              />
-              <StepCard
-                stepNumber="2"
-                titleKey="step2"
-                descKey="step2Desc"
-              />
-              <StepCard
-                stepNumber="3"
-                titleKey="step3"
-                descKey="step3Desc"
-              />
-            </div>
-          </section>
+                            {/* Секция "Как это работает" */}
+                            <section className="space-y-6">
+                                <h2 className="text-3xl font-bold text-center text-gray-900">
+                                    <TranslateText textKey="howItWorksTitle" />
+                                </h2>
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                                    <StepCard
+                                        stepNumber="1"
+                                        titleKey="step1"
+                                        descKey="step1Desc"
+                                    />
+                                    <StepCard
+                                        stepNumber="2"
+                                        titleKey="step2"
+                                        descKey="step2Desc"
+                                    />
+                                    <StepCard
+                                        stepNumber="3"
+                                        titleKey="step3"
+                                        descKey="step3Desc"
+                                    />
+                                </div>
+                            </section>
 
-          {/* Секция "Тарифные планы" */}
-          <section className="space-y-6">
-            <h2 className="text-3xl font-bold text-center text-gray-900">
-              <TranslateText textKey="pricingTitle" />
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              <PricingCard titleKey="freePlan" />
-              <PricingCard titleKey="proPlan" />
-              <PricingCard titleKey="premiumPlan" />
-            </div>
-          </section>
+                            {/* Секция "Тарифные планы" */}
+                            <section className="space-y-6">
+                                <h2 className="text-3xl font-bold text-center text-gray-900">
+                                    <TranslateText textKey="pricingTitle" />
+                                </h2>
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                                    <PricingCard titleKey="freePlan" />
+                                    <PricingCard titleKey="proPlan" />
+                                    <PricingCard titleKey="premiumPlan" />
+                                </div>
+                            </section>
 
-          {/* Секция "Подвал" */}
-          <footer className="text-center text-sm text-gray-500 space-y-2">
-            <div>
-              <a href="#" className="hover:underline mx-2"><TranslateText textKey="privacyPolicy" /></a>
-              <a href="#" className="hover:underline mx-2"><TranslateText textKey="termsOfService" /></a>
-              <a href="#" className="hover:underline mx-2"><TranslateText textKey="cookieNotice" /></a>
-            </div>
-            <p><TranslateText textKey="copyright" /></p>
-          </footer>
-        </div>
-      </div>
-    </LanguageProvider>
-  );
-};
+                            {/* Секция "Подвал" */}
+                            <footer className="text-center text-sm text-gray-500 space-y-2">
+                                <div>
+                                    <a href="#" className="hover:underline mx-2"><TranslateText textKey="privacyPolicy" /></a>
+                                    <a href="#" className="hover:underline mx-2"><TranslateText textKey="termsOfService" /></a>
+                                    <a href="#" className="hover:underline mx-2"><TranslateText textKey="cookieNotice" /></a>
+                                </div>
+                                <p><TranslateText textKey="copyright" /></p>
+                            </footer>
+                        </div>
+                    </div>
+                </LanguageProvider>
+            );
+        };
 
-// Ждем полной загрузки DOM перед монтированием приложения
-document.addEventListener('DOMContentLoaded', () => {
-  const container = document.getElementById('root');
-  if (container) {
-    const root = ReactDOM.createRoot(container);
-    root.render(
-      <React.StrictMode>
-        <App />
-      </React.StrictMode>
-    );
-  } else {
-    console.error('Не удалось найти корневой элемент для монтирования React-приложения.');
-  }
-});
-
-export default App;
+        // Ждем полной загрузки DOM перед монтированием приложения
+        document.addEventListener('DOMContentLoaded', () => {
+            const container = document.getElementById('root');
+            if (container) {
+                const root = createRoot(container);
+                root.render(
+                    <React.StrictMode>
+                        <App />
+                    </React.StrictMode>
+                );
+            } else {
+                console.error('Не удалось найти корневой элемент для монтирования React-приложения.');
+            }
+        });
+    </script>
+</body>
+</html>
