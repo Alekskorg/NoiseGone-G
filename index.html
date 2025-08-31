@@ -159,7 +159,7 @@
                             </div>
                         </div>
                         <div class="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
-                            <button class="w-full sm:w-auto px-8 py-3 font-semibold text-white bg-violet-600 rounded-lg hover:bg-violet-700 transition-all" data-translate="player_download">Скачать результат</button>
+                            <button id="download-button" class="w-full sm:w-auto px-8 py-3 font-semibold text-white bg-violet-600 rounded-lg hover:bg-violet-700 transition-all" data-translate="player_download">Скачать результат</button>
                             <button id="process-another" class="w-full sm:w-auto px-8 py-3 font-semibold text-violet-700 bg-violet-100 rounded-lg hover:bg-violet-200 transition-all" data-translate="player_another">Обработать другой файл</button>
                         </div>
                     </div>
@@ -475,7 +475,9 @@
                  // Statuses
                 "status_uploading": "Загрузка...",
                 "status_processing": "Обработка...",
-                "status_ready": "Готово!"
+                "status_ready": "Готово!",
+                "status_create_task": "Создание задачи...",
+                "status_error": "Ошибка:"
             },
             en: {
                 nav_features: "Features",
@@ -549,7 +551,9 @@
                 footer_copy: "© 2025 NoiseGone. All rights reserved.",
                 status_uploading: "Uploading...",
                 status_processing: "Processing...",
-                status_ready: "Ready!"
+                status_ready: "Ready!",
+                status_create_task: "Creating task...",
+                status_error: "Error:"
             },
             de: {
                 nav_features: "Merkmale",
@@ -623,7 +627,9 @@
                 footer_copy: "© 2025 NoiseGone. Alle Rechte vorbehalten.",
                 status_uploading: "Wird hochgeladen...",
                 status_processing: "Verarbeitung...",
-                status_ready: "Fertig!"
+                status_ready: "Fertig!",
+                status_create_task: "Erstelle Aufgabe...",
+                status_error: "Fehler:"
             }
         };
 
@@ -643,19 +649,18 @@
                     el.textContent = translations[lang][key];
                 }
             });
-             // Update titles that might not have the data-translate attribute
             document.title = {
                 ru: 'NoiseGone — Удаляйте шум из аудио за секунды',
                 en: 'NoiseGone — Remove Noise From Audio in Seconds',
                 de: 'NoiseGone — Audio-Rauschen in Sekunden entfernen'
-            }[lang];
+            } [lang];
         }
 
         languageSwitcher.addEventListener('change', (event) => {
             setLanguage(event.target.value);
         });
 
-        // --- DRAG & DROP & UPLOAD LOGIC ---
+        // --- DOM Elements ---
         const dropzone = document.getElementById('dropzone');
         const fileInput = document.getElementById('file-input');
         const uploadButton = document.getElementById('upload-button');
@@ -665,49 +670,127 @@
         const statusText = document.getElementById('upload-status');
         const playerContainer = document.getElementById('player-container');
         const processAnotherButton = document.getElementById('process-another');
-
-        const simulateProgress = () => {
-            heroSection.classList.add('hidden');
-            resultSection.classList.remove('hidden');
-            playerContainer.classList.add('hidden');
-
-            let width = 0;
-            statusText.textContent = translations[currentLang]['status_uploading'];
-            
-            // 1. Upload simulation
-            const uploadInterval = setInterval(() => {
-                if (width >= 40) {
-                    clearInterval(uploadInterval);
-                    statusText.textContent = translations[currentLang]['status_processing'];
-                    // 2. Processing simulation
-                    const processInterval = setInterval(() => {
-                        if (width >= 100) {
-                            clearInterval(processInterval);
-                            statusText.textContent = translations[currentLang]['status_ready'];
-                            playerContainer.classList.remove('hidden');
-                        } else {
-                            width += 2;
-                            progressBar.style.width = width + '%';
-                        }
-                    }, 50);
-                } else {
-                    width++;
-                    progressBar.style.width = width + '%';
-                }
-            }, 20);
-        };
+        const downloadButton = document.getElementById('download-button');
+        const slider = document.getElementById('ab-slider');
+        const afterContainer = document.getElementById('waveform-after-container');
         
+        // --- State Variables ---
+        let processedFileUrl = null;
+        let originalFileName = 'cleaned_audio.mp3';
+
+        // --- Core Logic ---
         const handleFile = (file) => {
             if (file && file.type.startsWith('audio/')) {
-                // Here you would start the actual ffmpeg.wasm processing
-                // For now, we just simulate the progress
-                console.log('File selected:', file.name);
-                simulateProgress();
+                originalFileName = `cleaned_${file.name}`;
+                processFileWithApi(file);
             } else {
                 alert('Please select a valid audio file.');
             }
         };
+        
+        async function processFileWithApi(file) {
+            // !!! ВАЖНО: Замените 'YOUR_AUPHONIC_API_KEY' на ваш настоящий ключ !!!
+            // !!! В реальном приложении этот ключ должен быть на бэкенде, а не в коде на клиенте.
+            const API_KEY = 'YOUR_AUPHONIC_API_KEY'; 
+            const API_BASE_URL = 'https://auphonic.com/api';
 
+            // 0. Reset UI
+            heroSection.classList.add('hidden');
+            resultSection.classList.remove('hidden');
+            playerContainer.classList.add('hidden');
+            progressBar.style.width = '0%';
+            processedFileUrl = null;
+
+            try {
+                // 1. Create Production
+                statusText.textContent = translations[currentLang]['status_create_task'];
+                progressBar.style.width = '10%';
+                const createResponse = await fetch(`${API_BASE_URL}/productions.json`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${API_KEY}`
+                    },
+                    body: JSON.stringify({
+                        metadata: { title: `NoiseGone - ${file.name}` },
+                        algorithms: { denoise: true, filter: true }
+                    })
+                });
+                if (!createResponse.ok) throw new Error(`API Error (Create): ${await createResponse.text()}`);
+                const createData = await createResponse.json();
+                const productionUuid = createData.data.uuid;
+
+                // 2. Upload File
+                statusText.textContent = translations[currentLang]['status_uploading'];
+                progressBar.style.width = '25%';
+                const formData = new FormData();
+                formData.append('input_file', file);
+                const uploadResponse = await fetch(`${API_BASE_URL}/production/${productionUuid}/upload.json`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${API_KEY}` },
+                    body: formData
+                });
+                if (!uploadResponse.ok) throw new Error(`API Error (Upload): ${await uploadResponse.text()}`);
+
+                // 3. Start Production
+                statusText.textContent = translations[currentLang]['status_processing'];
+                progressBar.style.width = '50%';
+                await fetch(`${API_BASE_URL}/production/${productionUuid}/start.json`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${API_KEY}` }
+                });
+
+                // 4. Poll for status
+                await pollForCompletion(productionUuid, API_KEY, API_BASE_URL);
+
+                // 5. Get result and show player
+                const finalStatusResponse = await fetch(`${API_BASE_URL}/production/${productionUuid}.json`, {
+                     headers: { 'Authorization': `Bearer ${API_KEY}` }
+                });
+                const finalData = await finalStatusResponse.json();
+                processedFileUrl = finalData.data.output_files[0].download_url;
+
+                statusText.textContent = translations[currentLang]['status_ready'];
+                progressBar.style.width = '100%';
+                playerContainer.classList.remove('hidden');
+
+            } catch (error) {
+                console.error('Processing failed:', error);
+                statusText.textContent = `${translations[currentLang]['status_error']} ${error.message}`;
+                progressBar.style.backgroundColor = '#ef4444'; // Turn red on error
+            }
+        }
+
+        function pollForCompletion(uuid, apiKey, baseUrl) {
+            return new Promise((resolve, reject) => {
+                const interval = setInterval(async () => {
+                    try {
+                        const statusResponse = await fetch(`${baseUrl}/production/${uuid}.json`, {
+                            headers: { 'Authorization': `Bearer ${apiKey}` }
+                        });
+                        const statusData = await statusResponse.json();
+                        
+                        let progress = parseFloat(statusData.data.progress);
+                        if (!isNaN(progress)) {
+                            progressBar.style.width = `${50 + (progress / 2)}%`;
+                        }
+
+                        if (statusData.data.status_string === 'Done') {
+                            clearInterval(interval);
+                            resolve();
+                        } else if (statusData.data.status === 3) { // Status 3 is Error
+                            clearInterval(interval);
+                            reject(new Error(statusData.data.error_message || 'Processing failed at Auphonic.'));
+                        }
+                    } catch (error) {
+                        clearInterval(interval);
+                        reject(error);
+                    }
+                }, 4000); // Poll every 4 seconds
+            });
+        }
+
+        // --- Event Listeners ---
         dropzone.addEventListener('click', () => fileInput.click());
         uploadButton.addEventListener('click', () => fileInput.click());
         fileInput.addEventListener('change', (e) => handleFile(e.target.files[0]));
@@ -727,25 +810,34 @@
             dropzone.addEventListener(eventName, () => dropzone.classList.remove('dropzone-active'));
         });
 
-        dropzone.addEventListener('drop', (e) => {
-            handleFile(e.dataTransfer.files[0]);
-        });
+        dropzone.addEventListener('drop', (e) => handleFile(e.dataTransfer.files[0]));
         
         processAnotherButton.addEventListener('click', () => {
             resultSection.classList.add('hidden');
             heroSection.classList.remove('hidden');
             progressBar.style.width = '0%';
+            progressBar.style.backgroundColor = '#8B5CF6'; // Reset color
         });
-
-
-        // --- A/B PLAYER LOGIC ---
-        const slider = document.getElementById('ab-slider');
-        const afterContainer = document.getElementById('waveform-after-container');
-
+        
         slider.addEventListener('input', (e) => {
             afterContainer.style.width = e.target.value + '%';
         });
-
+        
+        downloadButton.addEventListener('click', () => {
+            if (processedFileUrl) {
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = processedFileUrl;
+                // Атрибут download может не сработать для сторонних ссылок из-за политики безопасности браузеров (CORS).
+                // Лучший способ - открыть ссылку в новой вкладке, откуда пользователь сможет скачать файл.
+                a.target = '_blank';
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+            } else {
+                alert("File not processed yet or an error occurred.");
+            }
+        });
 
         // --- INITIALIZATION ---
         document.addEventListener('DOMContentLoaded', () => {
