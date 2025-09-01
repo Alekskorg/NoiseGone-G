@@ -165,8 +165,8 @@
                     </div>
                 </div>
             </section>
-
-
+            
+            <!-- All other sections from <section id="features"> to </footer> are unchanged -->
             <!-- Features Section -->
             <section id="features" class="py-20 bg-white">
                 <div class="container mx-auto px-6">
@@ -689,9 +689,8 @@
         };
         
         async function processFileWithApi(file) {
-            // !!! ВАЖНО: Замените 'YOUR_AUPHONIC_API_KEY' на ваш настоящий ключ !!!
-            // !!! В реальном приложении этот ключ должен быть на бэкенде, а не в коде на клиенте.
-            const API_KEY = 'YOUR_AUPHONIC_API_KEY'; 
+            // API ключ теперь встроен прямо сюда
+            const API_KEY = 'wzHWn1TavuIT8p1qOBDqmdjhym3FyhN'; 
             const API_BASE_URL = 'https://auphonic.com/api';
 
             // 0. Reset UI
@@ -713,7 +712,7 @@
                     },
                     body: JSON.stringify({
                         metadata: { title: `NoiseGone - ${file.name}` },
-                        algorithms: { denoise: true, filter: true }
+                        algorithms: { denoise: true, filter: true, normloudness: true } // Добавим нормализацию громкости
                     })
                 });
                 if (!createResponse.ok) throw new Error(`API Error (Create): ${await createResponse.text()}`);
@@ -828,9 +827,7 @@
                 const a = document.createElement('a');
                 a.style.display = 'none';
                 a.href = processedFileUrl;
-                // Атрибут download может не сработать для сторонних ссылок из-за политики безопасности браузеров (CORS).
-                // Лучший способ - открыть ссылку в новой вкладке, откуда пользователь сможет скачать файл.
-                a.target = '_blank';
+                a.target = '_blank'; // Open in new tab to let user download
                 document.body.appendChild(a);
                 a.click();
                 a.remove();
